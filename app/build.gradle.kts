@@ -57,6 +57,9 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation(project(":data"))
+    implementation(project(":domain"))
+
     // Koin dependencies
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)

@@ -1,6 +1,8 @@
 package com.app.binged
 
 import android.app.Application
+import com.app.binged.data.di.dataModule
+import com.app.binged.domain.di.domainModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -14,7 +16,10 @@ class BingedApplication: Application() {
         startKoin {
             androidLogger(Level.INFO)
             androidContext(this@BingedApplication)
-            modules(listOf())
+            modules(listOf(
+                dataModule,
+                domainModule
+            ))
         }
     }
 }
