@@ -23,3 +23,4 @@ rootProject.name = "Binged"
 include(":app")
 include(":core")
 include(":data")
+include(":domain")
