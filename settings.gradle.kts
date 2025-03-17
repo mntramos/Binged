@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Binged"
 include(":app")
+include(":core")
