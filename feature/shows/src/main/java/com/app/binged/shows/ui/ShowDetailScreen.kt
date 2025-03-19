@@ -11,7 +11,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -79,7 +78,7 @@ fun ShowDetailScreen(
                         }
                     ) {
                         Icon(
-                            imageVector = if (isTracked) Icons.Default.Check else Icons.Default.Close,
+                            imageVector = if (isTracked) Icons.Default.Close else Icons.Default.Add,
                             contentDescription = if (isTracked) "Untrack show" else "Track show"
                         )
                     }
