@@ -6,6 +6,8 @@ data class TmdbShowResponse(
     val id: Int,
     val name: String,
     val overview: String,
+    @SerializedName("backdrop_path")
+    val backdropPath: String?,
     @SerializedName("poster_path")
     val posterPath: String?,
     @SerializedName("first_air_date")

@@ -13,6 +13,7 @@ fun TmdbShowResponse.toDomain(): Show {
         id = id,
         name = name,
         overview = overview,
+        backdropPath = backdropPath,
         posterPath = posterPath,
         firstAirDate = firstAirDate,
         rating = voteAverage
@@ -24,6 +25,7 @@ fun ShowEntity.toDomain(): Show {
         id = id,
         name = name,
         overview = overview,
+        backdropPath = backdropPath,
         posterPath = posterPath,
         firstAirDate = firstAirDate,
         rating = rating
@@ -35,6 +37,7 @@ fun Show.toEntity(): ShowEntity {
         id = id,
         name = name,
         overview = overview,
+        backdropPath = backdropPath,
         posterPath = posterPath,
         firstAirDate = firstAirDate,
         rating = rating

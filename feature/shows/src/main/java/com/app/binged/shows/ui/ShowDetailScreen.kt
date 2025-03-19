@@ -1,9 +1,7 @@
 package com.app.binged.shows.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,7 +11,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -55,12 +54,33 @@ fun ShowDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Show Details") },
+                title = {
+                    when (showState) {
+                        is Result.Success -> Text((showState as Result.Success).data.name)
+                        else -> Text("Show Details")
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Go back"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            if (isTracked) {
+                                viewModel.untrackShow()
+                            } else {
+                                viewModel.trackShow()
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (isTracked) Icons.Default.Check else Icons.Default.Close,
+                            contentDescription = if (isTracked) "Untrack show" else "Track show"
                         )
                     }
                 }
@@ -115,7 +135,7 @@ fun ShowDetailScreen(
                             .height(200.dp)
                     ) {
                         AsyncImage(
-                            model = "https://image.tmdb.org/t/p/w500${show.posterPath}",
+                            model = "https://image.tmdb.org/t/p/w500${show.backdropPath}",
                             contentDescription = "${show.name} poster",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
@@ -127,29 +147,6 @@ fun ShowDetailScreen(
                             .fillMaxWidth()
                             .padding(16.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = show.name,
-                                style = MaterialTheme.typography.headlineSmall
-                            )
-
-                            Button(
-                                onClick = {
-                                    if (isTracked) {
-                                        viewModel.untrackShow()
-                                    } else {
-                                        viewModel.trackShow()
-                                    }
-                                }
-                            ) {
-                                Text(if (isTracked) "Untrack" else "Track")
-                            }
-                        }
-
                         Text(
                             text = "First aired: ${show.firstAirDate}",
                             style = MaterialTheme.typography.bodyMedium,
@@ -183,11 +180,10 @@ fun ShowDetailScreen(
                                 )
 
                                 seasonEpisodes.forEach { episode ->
-//                                    EpisodeItem(
-//                                        episode = episode,
-//                                        onDeleteClick = { viewModel.deleteEpisode(episode) }
-//                                    )
-                                    Text(text = "Episode nnnnnn") // TODO
+                                    EpisodeItem(
+                                        episode = episode,
+                                        onClick = { viewModel.deleteEpisode(episode) }
+                                    )
                                 }
                             }
                         } else if (isTracked) {
