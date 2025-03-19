@@ -1,6 +1,7 @@
 package com.app.binged.data.di
 
 import androidx.room.Room
+import com.app.binged.data.BuildConfig
 import com.app.binged.data.api.TmdbService
 import com.app.binged.data.database.AppDatabase
 import com.app.binged.data.repository.EpisodeRepositoryImpl
@@ -37,13 +38,8 @@ val dataModule = module {
 
         val okHttpClient = OkHttpClient.Builder()
             .addInterceptor { chain ->
-                val original = chain.request()
-                val url = original.url.newBuilder()
-                    .addQueryParameter("api_key", "YOUR_TMDB_API_KEY")
-                    .build()
-
-                val request = original.newBuilder()
-                    .url(url)
+                val request = chain.request().newBuilder()
+                    .addHeader("Authorization", "Bearer ${BuildConfig.TMDB_KEY}")
                     .build()
 
                 chain.proceed(request)

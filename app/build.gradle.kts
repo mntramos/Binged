@@ -59,8 +59,15 @@ dependencies {
 
     implementation(project(":data"))
     implementation(project(":domain"))
+    implementation(project(":feature:search"))
+    implementation(project(":feature:shows"))
+    implementation(project(":feature:tracking"))
+    implementation(project(":navigation"))
 
     // Koin dependencies
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
+
+    // Jetpack Compose
+    implementation(libs.androidx.navigation.compose)
 }

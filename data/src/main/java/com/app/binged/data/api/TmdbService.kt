@@ -18,6 +18,7 @@ interface TmdbService {
         @Query("query") query: String
     ): TmdbSearchResponse
 
+    // TODO
     @GET("tv/popular")
     suspend fun getPopularShows(): TmdbSearchResponse
 }
