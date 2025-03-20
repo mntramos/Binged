@@ -1,4 +1,4 @@
-package com.app.binged.shows.ui
+package com.app.binged.feature.shows.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,7 +31,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.app.binged.core.utils.Result
-import com.app.binged.shows.viewmodel.ShowDetailViewModel
+import com.app.binged.feature.shows.viewmodel.ShowDetailViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

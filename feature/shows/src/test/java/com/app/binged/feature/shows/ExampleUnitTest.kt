@@ -1,4 +1,4 @@
-package com.app.binged.shows
+package com.app.binged.feature.shows
 
 import org.junit.Test
 

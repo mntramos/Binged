@@ -1,4 +1,4 @@
-package com.app.binged.shows.viewmodel
+package com.app.binged.feature.shows.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

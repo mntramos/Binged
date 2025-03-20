@@ -1,7 +1,7 @@
-package com.app.binged.shows.di
+package com.app.binged.feature.shows.di
 
-import com.app.binged.shows.viewmodel.ShowDetailViewModel
-import com.app.binged.shows.viewmodel.ShowsViewModel
+import com.app.binged.feature.shows.viewmodel.ShowDetailViewModel
+import com.app.binged.feature.shows.viewmodel.ShowsViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 

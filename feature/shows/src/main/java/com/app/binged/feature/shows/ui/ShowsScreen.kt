@@ -1,4 +1,4 @@
-package com.app.binged.shows.ui
+package com.app.binged.feature.shows.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,7 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.app.binged.shows.viewmodel.ShowsViewModel
+import com.app.binged.feature.shows.viewmodel.ShowsViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

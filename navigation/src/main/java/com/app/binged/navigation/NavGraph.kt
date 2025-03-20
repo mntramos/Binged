@@ -8,8 +8,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.app.binged.feature.search.ui.SearchScreen
-import com.app.binged.shows.ui.ShowDetailScreen
-import com.app.binged.shows.ui.ShowsScreen
+import com.app.binged.feature.shows.ui.ShowDetailScreen
+import com.app.binged.feature.shows.ui.ShowsScreen
 import com.app.binged.tracking.ui.LogEpisodeScreen
 
 @Composable

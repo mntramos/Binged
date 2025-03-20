@@ -1,4 +1,4 @@
-package com.app.binged.shows
+package com.app.binged.feature.shows
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

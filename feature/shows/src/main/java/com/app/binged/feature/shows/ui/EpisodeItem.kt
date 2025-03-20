@@ -1,4 +1,4 @@
-package com.app.binged.shows.ui
+package com.app.binged.feature.shows.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

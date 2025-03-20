@@ -4,7 +4,7 @@ import android.app.Application
 import com.app.binged.data.di.dataModule
 import com.app.binged.domain.di.domainModule
 import com.app.binged.feature.search.di.searchModule
-import com.app.binged.shows.di.showsModule
+import com.app.binged.feature.shows.di.showsModule
 import com.app.binged.tracking.di.trackingModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
