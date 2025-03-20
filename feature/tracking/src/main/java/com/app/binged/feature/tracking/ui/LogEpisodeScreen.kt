@@ -1,4 +1,4 @@
-package com.app.binged.tracking.ui
+package com.app.binged.feature.tracking.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -9,7 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.app.binged.tracking.viewmodel.LogEpisodeViewModel
+import com.app.binged.feature.tracking.viewmodel.LogEpisodeViewModel
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
 import java.util.*

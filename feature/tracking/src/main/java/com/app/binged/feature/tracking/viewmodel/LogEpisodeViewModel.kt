@@ -1,4 +1,4 @@
-package com.app.binged.tracking.viewmodel
+package com.app.binged.feature.tracking.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

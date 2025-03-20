@@ -1,4 +1,4 @@
-package com.app.binged.tracking
+package com.app.binged.feature.tracking
 
 import org.junit.Test
 

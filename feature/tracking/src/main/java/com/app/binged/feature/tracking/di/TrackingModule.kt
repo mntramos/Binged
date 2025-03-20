@@ -1,6 +1,6 @@
-package com.app.binged.tracking.di
+package com.app.binged.feature.tracking.di
 
-import com.app.binged.tracking.viewmodel.LogEpisodeViewModel
+import com.app.binged.feature.tracking.viewmodel.LogEpisodeViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 

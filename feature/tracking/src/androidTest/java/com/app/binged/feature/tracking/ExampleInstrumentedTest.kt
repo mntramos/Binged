@@ -1,4 +1,4 @@
-package com.app.binged.tracking
+package com.app.binged.feature.tracking
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
