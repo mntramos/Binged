@@ -1,4 +1,4 @@
-package com.app.binged.search.ui
+package com.app.binged.feature.search.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column

@@ -1,6 +1,6 @@
-package com.app.binged.search.di
+package com.app.binged.feature.search.di
 
-import com.app.binged.search.viewmodel.SearchViewModel
+import com.app.binged.feature.search.viewmodel.SearchViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 

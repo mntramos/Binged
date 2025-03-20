@@ -1,4 +1,4 @@
-package com.app.binged.search.viewmodel
+package com.app.binged.feature.search.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

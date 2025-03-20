@@ -1,4 +1,4 @@
-package com.app.binged.search
+package com.app.binged.feature.search
 
 import org.junit.Test
 

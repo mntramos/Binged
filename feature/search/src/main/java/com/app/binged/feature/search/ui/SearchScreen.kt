@@ -1,4 +1,4 @@
-package com.app.binged.search.ui
+package com.app.binged.feature.search.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,7 +26,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
 import com.app.binged.core.utils.Result
 import com.app.binged.domain.model.Show
-import com.app.binged.search.viewmodel.SearchViewModel
+import com.app.binged.feature.search.viewmodel.SearchViewModel
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 
