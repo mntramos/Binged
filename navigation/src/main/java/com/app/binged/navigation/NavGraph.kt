@@ -35,17 +35,24 @@ fun NavGraph(
         composable(
             route = Route.ShowDetail.path,
             arguments = listOf(
-                navArgument("showId") { type = NavType.IntType }
+                navArgument("showId") { type = NavType.IntType },
+                navArgument("fromSearch") { defaultValue = false; type = NavType.BoolType }
             )
         ) { backStackEntry ->
             val showId = backStackEntry.arguments?.getInt("showId") ?: 0
+            val fromSearch = backStackEntry.arguments?.getBoolean("fromSearch") ?: false
+
             ShowDetailScreen(
                 showId = showId,
                 onLogEpisodeClick = {
                     navController.navigate(Route.LogEpisode.createRoute(showId))
                 },
                 onBack = {
-                    navController.popBackStack()
+                    if (fromSearch) {
+                        navController.popBackStack(Route.Search.path, false)
+                    } else {
+                        navController.popBackStack()
+                    }
                 }
             )
         }
@@ -68,9 +75,8 @@ fun NavGraph(
         composable(Route.Search.path) {
             SearchScreen(
                 onShowClick = { showId ->
-                    navController.navigate(Route.ShowDetail.createRoute(showId)) {
-                        // Pop up to shows list and save state when navigating from search to detail
-                        popUpTo(Route.ShowList.path) {
+                    navController.navigate(Route.ShowDetail.createRoute(showId, true)) {
+                        popUpTo(Route.Search.path) {
                             saveState = true
                         }
                         launchSingleTop = true

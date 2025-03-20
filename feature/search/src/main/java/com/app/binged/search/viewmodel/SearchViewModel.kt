@@ -28,4 +28,8 @@ class SearchViewModel(
             _searchInProgress.value = false
         }
     }
+
+    fun clearSearchResults() {
+        _searchResults.value = Result.Success(emptyList())
+    }
 }
