@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.app.binged.feature.diary.ui.DiaryScreen
 import com.app.binged.feature.search.ui.SearchScreen
 import com.app.binged.feature.shows.ui.ShowDetailScreen
 import com.app.binged.feature.shows.ui.ShowsScreen
@@ -28,6 +29,9 @@ fun NavGraph(
                 },
                 onSearchClick = {
                     navController.navigate(Route.Search.path)
+                },
+                onActionClick = {
+                    navController.navigate(Route.Diary.path)
                 }
             )
         }
@@ -88,6 +92,14 @@ fun NavGraph(
                         restoreState = true
                     }
                 },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Route.Diary.path) {
+            DiaryScreen(
                 onBack = {
                     navController.popBackStack()
                 }

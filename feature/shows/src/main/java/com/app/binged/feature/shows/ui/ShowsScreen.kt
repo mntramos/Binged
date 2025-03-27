@@ -9,8 +9,9 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -21,8 +22,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.app.binged.feature.shows.viewmodel.ShowsViewModel
+import com.app.binged.shows.R
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,6 +33,7 @@ import org.koin.androidx.compose.koinViewModel
 fun ShowsScreen(
     onShowClick: (Int) -> Unit,
     onSearchClick: () -> Unit,
+    onActionClick: () -> Unit,
     viewModel: ShowsViewModel = koinViewModel()
 ) {
     val shows by viewModel.shows.collectAsState()
@@ -39,14 +43,22 @@ fun ShowsScreen(
             TopAppBar(
                 title = { Text("Library") },
                 actions = {
-                    IconButton(onClick = onSearchClick) {
+                    IconButton(onClick = onActionClick) {
                         Icon(
-                            imageVector = Icons.Default.Search,
+                            painter = painterResource(R.drawable.material_symbols_outlined_book_2),
                             contentDescription = "Search Shows"
                         )
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = onSearchClick) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add shows"
+                )
+            }
         }
     ) { paddingValues ->
         if (shows.isEmpty()) {

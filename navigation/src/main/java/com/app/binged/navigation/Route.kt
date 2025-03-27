@@ -14,4 +14,6 @@ sealed class Route(val path: String) {
     }
 
     data object Search : Route("search")
+
+    data object Diary : Route("diary")
 }

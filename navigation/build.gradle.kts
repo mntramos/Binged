@@ -46,6 +46,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     implementation(project(":core"))
+    implementation(project(":feature:diary"))
     implementation(project(":feature:search"))
     implementation(project(":feature:shows"))
     implementation(project(":feature:tracking"))

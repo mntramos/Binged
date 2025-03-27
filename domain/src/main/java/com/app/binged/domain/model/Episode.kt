@@ -13,4 +13,10 @@ data class Episode(
     val watchedDate: Date,
     val stillPath: String?,
     val notes: String? = null
-)
+) {
+    fun getIdentifier(): String {
+        val season = seasonNumber.toString().padStart(2, '0')
+        val episode = episodeNumber.toString().padStart(2, '0')
+        return "S${season}E${episode}"
+    }
+}

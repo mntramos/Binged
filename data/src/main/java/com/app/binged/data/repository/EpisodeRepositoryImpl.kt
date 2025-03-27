@@ -14,6 +14,13 @@ class EpisodeRepositoryImpl(
     private val episodeDao: EpisodeDao,
     private val tmdbService: TmdbService
 ) : EpisodeRepository {
+
+    override fun getAllEpisodes(): Flow<List<Episode>> {
+        return episodeDao.getAllEpisodes().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
     override fun getEpisodesByShow(showId: Int): Flow<List<Episode>> {
         return episodeDao.getEpisodesByShow(showId).map { entities ->
             entities.map { it.toDomain() }
