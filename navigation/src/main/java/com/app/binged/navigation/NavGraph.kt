@@ -1,5 +1,8 @@
 package com.app.binged.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -19,7 +22,11 @@ fun NavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Route.ShowList.path
+        startDestination = Route.ShowList.path,
+        enterTransition = { slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(300)) },
+        exitTransition = { slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(300)) },
+        popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(300)) },
+        popExitTransition = { slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(300)) }
     ) {
 
         composable(Route.ShowList.path) {

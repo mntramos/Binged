@@ -52,4 +52,5 @@ dependencies {
     implementation(project(":feature:tracking"))
 
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.accompanist.navigation.animation)
 }
