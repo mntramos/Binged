@@ -44,7 +44,8 @@ fun NavGraph(
 
             ShowDetailScreen(
                 showId = showId,
-                onLogEpisodeClick = {
+                onLogEpisodeClick = { _, showName ->
+                    navController.currentBackStackEntry?.savedStateHandle?.set("showName", showName)
                     navController.navigate(Route.LogEpisode.createRoute(showId))
                 },
                 onBack = {
@@ -64,8 +65,12 @@ fun NavGraph(
             )
         ) { backStackEntry ->
             val showId = backStackEntry.arguments?.getInt("showId") ?: 0
+            val showName = navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.get<String>("showName") ?: ""
             LogEpisodeScreen(
                 showId = showId,
+                showName = showName,
                 onNavigateBack = {
                     navController.popBackStack()
                 }

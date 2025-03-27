@@ -61,5 +61,5 @@ val dataModule = module {
 
     // Repositories
     single<ShowRepository> { ShowRepositoryImpl(get(), get()) }
-    single<EpisodeRepository> { EpisodeRepositoryImpl(get()) }
+    single<EpisodeRepository> { EpisodeRepositoryImpl(get(), get()) }
 }

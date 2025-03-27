@@ -25,6 +25,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -38,7 +41,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ShowDetailScreen(
     showId: Int,
-    onLogEpisodeClick: (Int) -> Unit,
+    onLogEpisodeClick: (Int, String) -> Unit,
     onBack: () -> Unit,
     viewModel: ShowDetailViewModel = koinViewModel()
 ) {
@@ -49,6 +52,15 @@ fun ShowDetailScreen(
     val showState by viewModel.showDetails.collectAsState()
     val episodes by viewModel.episodes.collectAsState()
     val isTracked by viewModel.isTracked.collectAsState()
+
+    var showName by remember { mutableStateOf("") }
+
+    LaunchedEffect(showState) {
+        showName = when (showState) {
+            is Result.Success -> (showState as Result.Success).data.name
+            else -> ""
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -87,7 +99,7 @@ fun ShowDetailScreen(
         },
         floatingActionButton = {
             if (isTracked) {
-                FloatingActionButton(onClick = { onLogEpisodeClick(showId) }) {
+                FloatingActionButton(onClick = { onLogEpisodeClick(showId, showName) }) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Log episode"
@@ -144,7 +156,7 @@ fun ShowDetailScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
+                            .padding(horizontal = 16.dp)
                     ) {
                         Text(
                             text = "First aired: ${show.firstAirDate}",
@@ -163,25 +175,26 @@ fun ShowDetailScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(top = 16.dp)
                         )
+                    }
 
                         if (isTracked && episodes.isNotEmpty()) {
                             Text(
                                 text = "Your Watched Episodes",
                                 style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
+                                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
                             )
 
                             episodes.groupBy { it.seasonNumber }.forEach { (season, seasonEpisodes) ->
                                 Text(
                                     text = "Season $season",
                                     style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
                                 )
 
-                                seasonEpisodes.forEach { episode ->
+                                seasonEpisodes.distinctBy { it.episodeId }.forEach { episode ->
                                     EpisodeItem(
                                         episode = episode,
-                                        onClick = { viewModel.deleteEpisode(episode) }
+                                        onLongClick = { viewModel.deleteEpisode(episode) }
                                     )
                                 }
                             }
@@ -189,10 +202,10 @@ fun ShowDetailScreen(
                             Text(
                                 text = "You haven't logged any episodes yet.",
                                 style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.padding(top = 24.dp)
+                                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp)
                             )
                         }
-                    }
+//                    }
                 }
             }
         }

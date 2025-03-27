@@ -1,6 +1,7 @@
 package com.app.binged.domain.di
 
 import com.app.binged.domain.usecase.DeleteEpisodeUseCase
+import com.app.binged.domain.usecase.GetEpisodeDetailsUseCase
 import com.app.binged.domain.usecase.GetEpisodesForShowUseCase
 import com.app.binged.domain.usecase.GetShowDetailsUseCase
 import com.app.binged.domain.usecase.GetTrackedShowsUseCase
@@ -19,6 +20,7 @@ val domainModule = module {
     factory { UntrackShowUseCase(get()) }
 
     // Episode use cases
+    factory { GetEpisodeDetailsUseCase(get()) }
     factory { GetEpisodesForShowUseCase(get()) }
     factory { LogEpisodeUseCase(get()) }
     factory { DeleteEpisodeUseCase(get()) }

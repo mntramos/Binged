@@ -90,7 +90,6 @@ class ShowDetailViewModel(
         }
     }
 
-    // TODO
     fun deleteEpisode(episode: Episode) {
         viewModelScope.launch {
             deleteEpisodeUseCase(episode)

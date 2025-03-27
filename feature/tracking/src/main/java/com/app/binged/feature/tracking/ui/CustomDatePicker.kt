@@ -1,22 +1,40 @@
 package com.app.binged.feature.tracking.ui
 
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import java.util.Calendar
 import java.util.Date
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomDatePicker(
     initialDate: Date,
     onDateSelected: (Date) -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    val calendar = Calendar.getInstance()
+    calendar.time = initialDate
+
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialDate.time
+    )
+
+    DatePickerDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Select Date") },
         confirmButton = {
-            TextButton(onClick = { onDateSelected(initialDate) }) {
+            TextButton(
+                onClick = {
+                    datePickerState.selectedDateMillis?.let { timeInMillis ->
+                        val selectedDate = Date(timeInMillis)
+                        onDateSelected(selectedDate)
+                    } ?: onDismiss()
+                }
+            ) {
                 Text("OK")
             }
         },
@@ -24,9 +42,10 @@ fun CustomDatePicker(
             TextButton(onClick = onDismiss) {
                 Text("Cancel")
             }
-        },
-        text = {
-            Text("In a real app, this would be a date picker component")
         }
-    )
+    ) {
+        DatePicker(
+            state = datePickerState
+        )
+    }
 }
