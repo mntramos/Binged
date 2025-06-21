@@ -7,5 +7,7 @@ data class Show(
     val backdropPath: String?,
     val posterPath: String?,
     val firstAirDate: String,
-    val rating: Double
+    val rating: Double,
+    val tagline: String,
+    val seasonCount: Int
 )

@@ -13,5 +13,8 @@ data class TmdbShowResponse(
     @SerializedName("first_air_date")
     val firstAirDate: String,
     @SerializedName("vote_average")
-    val voteAverage: Double
+    val voteAverage: Double,
+    val tagline: String? = "",
+    @SerializedName("number_of_seasons")
+    val numberOfSeasons: Int? = 1,
 )

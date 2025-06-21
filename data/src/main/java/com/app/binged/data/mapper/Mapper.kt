@@ -17,7 +17,9 @@ fun TmdbShowResponse.toDomain(): Show {
         backdropPath = backdropPath,
         posterPath = posterPath,
         firstAirDate = firstAirDate,
-        rating = voteAverage
+        rating = voteAverage,
+        tagline = tagline ?: "",
+        seasonCount = numberOfSeasons ?: 1
     )
 }
 
@@ -29,7 +31,9 @@ fun ShowEntity.toDomain(): Show {
         backdropPath = backdropPath,
         posterPath = posterPath,
         firstAirDate = firstAirDate,
-        rating = rating
+        rating = rating,
+        tagline = tagline,
+        seasonCount = seasonCount
     )
 }
 
@@ -41,7 +45,9 @@ fun Show.toEntity(): ShowEntity {
         backdropPath = backdropPath,
         posterPath = posterPath,
         firstAirDate = firstAirDate,
-        rating = rating
+        rating = rating,
+        tagline = tagline,
+        seasonCount = seasonCount
     )
 }
 

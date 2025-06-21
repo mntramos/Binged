@@ -11,5 +11,7 @@ data class ShowEntity(
     val backdropPath: String?,
     val posterPath: String?,
     val firstAirDate: String,
-    val rating: Double
+    val rating: Double,
+    val tagline: String = "",
+    val seasonCount: Int = 1
 )

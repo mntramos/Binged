@@ -4,6 +4,7 @@ import androidx.room.Room
 import com.app.binged.data.BuildConfig
 import com.app.binged.data.api.TmdbService
 import com.app.binged.data.database.AppDatabase
+import com.app.binged.data.database.MIGRATION_1_2
 import com.app.binged.data.repository.EpisodeRepositoryImpl
 import com.app.binged.data.repository.ShowRepositoryImpl
 import com.app.binged.domain.contract.EpisodeRepository
@@ -23,7 +24,7 @@ val dataModule = module {
             androidContext(),
             AppDatabase::class.java,
             "binged-db"
-        ).build()
+        ).addMigrations(MIGRATION_1_2).build()
     }
 
     // DAOs
