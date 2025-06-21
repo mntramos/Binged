@@ -206,11 +206,7 @@ fun ShowDetailScreen(
                                 )
                             }
 
-                            Text(
-                                text = show.overview,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(vertical = 16.dp)
-                            )
+                            ExpandableText(text = show.overview)
 
                             if (isTracked && episodes.isNotEmpty()) {
                                 Text(
