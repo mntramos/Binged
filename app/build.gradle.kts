@@ -4,6 +4,13 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+fun calculateVersionCode(versionName: String): Int {
+    val (major, minor, patch) = versionName.split(".")
+        .map { it.toIntOrNull() ?: 0 }
+
+    return major * 10000 + minor * 100 + patch
+}
+
 android {
     namespace = "com.app.binged"
     compileSdk = 35
@@ -12,13 +19,30 @@ android {
         applicationId = "com.app.binged"
         minSdk = 29
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+
+        val version = "1.1.0"
+        versionName = version
+        versionCode = calculateVersionCode(version)
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    applicationVariants.all {
+        outputs.all {
+            val appName = "Binged"
+            val buildType = buildType.name
+            val versionName = versionName
+
+            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName =
+                "${appName}-${buildType}-${versionName}.apk"
+        }
+    }
+
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
