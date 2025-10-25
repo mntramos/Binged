@@ -5,16 +5,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
@@ -23,12 +27,19 @@ import coil.compose.AsyncImage
 import com.app.binged.domain.model.Show
 
 @Composable
-fun SearchResultItem(show: Show, onClick: () -> Unit) {
-    Column(modifier = Modifier.clickable(onClick = onClick)) {
+fun SearchResultItem(
+    show: Show,
+    onClick: () -> Unit,
+    onAddClick: () -> Unit
+) {
+    Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
+                .clickable(onClick = onClick)
+                .padding(end = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
                 model = "https://image.tmdb.org/t/p/w200${show.posterPath}",
@@ -41,8 +52,8 @@ fun SearchResultItem(show: Show, onClick: () -> Unit) {
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
+                    .weight(1f)
+                    .padding(start = 16.dp, end = 16.dp)
             ) {
                 Text(
                     text = show.name,
@@ -63,6 +74,13 @@ fun SearchResultItem(show: Show, onClick: () -> Unit) {
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+
+            IconButton(onClick = onAddClick) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add show"
                 )
             }
         }
