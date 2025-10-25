@@ -23,9 +23,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -70,7 +75,11 @@ fun ShowDetailScreen(
     val showState by viewModel.showDetails.collectAsState()
     val episodes by viewModel.episodes.collectAsState()
     val isTracked by viewModel.isTracked.collectAsState()
+    val isWatching by viewModel.isWatching.collectAsState()
+    val isFavorite by viewModel.isFavorite.collectAsState()
+
     var showName by remember { mutableStateOf("") }
+    var expanded by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
 
@@ -305,6 +314,47 @@ fun ShowDetailScreen(
                                     tint = if (scrollState.value < 50) Color.White else LocalContentColor.current
                                 )
                             }
+
+                            if (isTracked) {
+                                Box {
+                                    IconButton(onClick = { expanded = true }) {
+                                        Icon(
+                                            imageVector = Icons.Default.MoreVert,
+                                            contentDescription = "More options",
+                                            tint = if (scrollState.value < 50) Color.White else LocalContentColor.current
+                                        )
+                                    }
+
+                                    DropdownMenu(
+                                        expanded = expanded,
+                                        onDismissRequest = { expanded = false }
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { Text(if (isWatching) "Remove from currently watching" else "Mark as watching") },
+                                            onClick = { viewModel.updateWatchingStatus(isWatching.not()) },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = if (isWatching) Icons.Default.RemoveRedEye else Icons.Outlined.RemoveRedEye,
+                                                    contentDescription = if (isWatching) "Unwatch show" else "Watch show"
+                                                )
+                                            }
+                                        )
+
+                                        DropdownMenuItem(
+                                            text = { Text(if (isFavorite) "Remove from favorites" else "Mark as favorite") },
+                                            onClick = { viewModel.updateFavoriteStatus(isFavorite.not()) },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = if (isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
+                                                    contentDescription = if (isFavorite) "Unfavorite show" else "Favorite show"
+                                                )
+                                            }
+                                        )
+                                    }
+                                }
+
+                            }
+
                         }
                     }
 

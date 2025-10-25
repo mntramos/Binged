@@ -10,6 +10,8 @@ import com.app.binged.domain.usecase.LogEpisodeUseCase
 import com.app.binged.domain.usecase.SearchShowsUseCase
 import com.app.binged.domain.usecase.TrackShowUseCase
 import com.app.binged.domain.usecase.UntrackShowUseCase
+import com.app.binged.domain.usecase.UpdateFavoriteStatusUseCase
+import com.app.binged.domain.usecase.UpdateWatchingStatusUseCase
 import org.koin.dsl.module
 
 val domainModule = module {
@@ -19,6 +21,8 @@ val domainModule = module {
     factory { GetShowDetailsUseCase(get()) }
     factory { TrackShowUseCase(get()) }
     factory { UntrackShowUseCase(get()) }
+    factory { UpdateFavoriteStatusUseCase(get()) }
+    factory { UpdateWatchingStatusUseCase(get()) }
 
     // Episode use cases
     factory { GetAllEpisodesUseCase(get()) }

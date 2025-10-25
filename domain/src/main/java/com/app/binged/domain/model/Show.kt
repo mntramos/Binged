@@ -9,5 +9,7 @@ data class Show(
     val firstAirDate: String,
     val rating: Double,
     val tagline: String,
-    val seasonCount: Int
+    val seasonCount: Int,
+    val isFavorite: Boolean = false,
+    val isWatching: Boolean = false
 )

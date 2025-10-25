@@ -13,5 +13,7 @@ data class ShowEntity(
     val firstAirDate: String,
     val rating: Double,
     val tagline: String = "",
-    val seasonCount: Int = 1
+    val seasonCount: Int = 1,
+    val isFavorite: Boolean = false,
+    val isWatching: Boolean = false
 )

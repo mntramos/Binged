@@ -33,7 +33,9 @@ fun ShowEntity.toDomain(): Show {
         firstAirDate = firstAirDate,
         rating = rating,
         tagline = tagline,
-        seasonCount = seasonCount
+        seasonCount = seasonCount,
+        isFavorite = isFavorite,
+        isWatching = isWatching
     )
 }
 

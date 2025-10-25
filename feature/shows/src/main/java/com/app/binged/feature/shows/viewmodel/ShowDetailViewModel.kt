@@ -2,6 +2,8 @@ package com.app.binged.feature.shows.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.app.binged.core.utils.Result
+import com.app.binged.domain.model.Episode
 import com.app.binged.domain.model.Show
 import com.app.binged.domain.usecase.DeleteEpisodeUseCase
 import com.app.binged.domain.usecase.GetEpisodesForShowUseCase
@@ -9,9 +11,9 @@ import com.app.binged.domain.usecase.GetShowDetailsUseCase
 import com.app.binged.domain.usecase.GetTrackedShowsUseCase
 import com.app.binged.domain.usecase.TrackShowUseCase
 import com.app.binged.domain.usecase.UntrackShowUseCase
+import com.app.binged.domain.usecase.UpdateFavoriteStatusUseCase
+import com.app.binged.domain.usecase.UpdateWatchingStatusUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
-import com.app.binged.core.utils.Result
-import com.app.binged.domain.model.Episode
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -23,6 +25,8 @@ class ShowDetailViewModel(
     private val trackShowUseCase: TrackShowUseCase,
     private val untrackShowUseCase: UntrackShowUseCase,
     private val deleteEpisodeUseCase: DeleteEpisodeUseCase,
+    private val updateFavoriteStatusUseCase: UpdateFavoriteStatusUseCase,
+    private val updateWatchingStatusUseCase: UpdateWatchingStatusUseCase,
     getTrackedShowsUseCase: GetTrackedShowsUseCase
 ) : ViewModel() {
 
@@ -37,6 +41,8 @@ class ShowDetailViewModel(
         )
 
     val isTracked = MutableStateFlow(false)
+    val isWatching = MutableStateFlow(false)
+    val isFavorite = MutableStateFlow(false)
 
     val episodes: StateFlow<List<Episode>> = MutableStateFlow(emptyList())
 
@@ -50,6 +56,8 @@ class ShowDetailViewModel(
 
                 if (result is Result.Success) {
                     checkIfShowIsTracked(result.data)
+                    checkIfShowIsWatching(result.data)
+                    checkIfShowIsFavorite(result.data)
                     loadEpisodes(showId)
                 }
             } catch (e: Exception) {
@@ -62,6 +70,22 @@ class ShowDetailViewModel(
         viewModelScope.launch {
             trackedShows.collect { shows ->
                 isTracked.value = shows.any { it.id == show.id }
+            }
+        }
+    }
+
+    private fun checkIfShowIsWatching(show: Show) {
+        viewModelScope.launch {
+            trackedShows.collect { shows ->
+                isWatching.value = shows.firstOrNull { it.id == show.id }?.isWatching ?: false
+            }
+        }
+    }
+
+    private fun checkIfShowIsFavorite(show: Show) {
+        viewModelScope.launch {
+            trackedShows.collect { shows ->
+                isFavorite.value = shows.firstOrNull { it.id == show.id }?.isFavorite ?: false
             }
         }
     }
@@ -87,6 +111,22 @@ class ShowDetailViewModel(
             val show = (_showDetails.value as? Result.Success)?.data ?: return@launch
             untrackShowUseCase(show)
             isTracked.value = false
+        }
+    }
+
+    fun updateWatchingStatus(status: Boolean) {
+        viewModelScope.launch {
+            val show = (_showDetails.value as? Result.Success)?.data ?: return@launch
+            updateWatchingStatusUseCase(show, status)
+            isWatching.value = true
+        }
+    }
+
+    fun updateFavoriteStatus(status: Boolean) {
+        viewModelScope.launch {
+            val show = (_showDetails.value as? Result.Success)?.data ?: return@launch
+            updateFavoriteStatusUseCase(show, status)
+            isFavorite.value = true
         }
     }
 

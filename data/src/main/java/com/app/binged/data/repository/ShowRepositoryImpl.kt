@@ -45,4 +45,12 @@ class ShowRepositoryImpl(
     override suspend fun deleteShow(show: Show) {
         showDao.deleteShow(show.toEntity())
     }
+
+    override suspend fun updateFavoriteStatus(show: Show, isFavorite: Boolean) {
+        showDao.updateFavoriteStatus(show.id, isFavorite)
+    }
+
+    override suspend fun updateWatchingStatus(show: Show, isWatching: Boolean) {
+        showDao.updateWatchingStatus(show.id, isWatching)
+    }
 }
