@@ -36,6 +36,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,7 +59,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.app.binged.core.utils.Result
+import com.app.binged.core.utils.UiEvent
 import com.app.binged.feature.shows.viewmodel.ShowDetailViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 
@@ -80,6 +85,8 @@ fun ShowDetailScreen(
 
     var showName by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    var snackbarJob by remember { mutableStateOf<Job?>(null) }
 
     val scrollState = rememberScrollState()
 
@@ -87,6 +94,19 @@ fun ShowDetailScreen(
         showName = when (showState) {
             is Result.Success -> (showState as Result.Success).data.name
             else -> ""
+        }
+    }
+
+    LaunchedEffect("snackbar") {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowSnackbar -> {
+                    snackbarJob?.cancel()
+                    snackbarJob = launch {
+                        snackbarHostState.showSnackbar(event.message)
+                    }
+                }
+            }
         }
     }
 
@@ -106,6 +126,14 @@ fun ShowDetailScreen(
     val appBarAlpha = (scrollState.value.coerceAtMost(200) / 200f).coerceIn(0f, 0.95f)
 
     Box(modifier = Modifier.fillMaxSize()) {
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        )
+
         when (showState) {
             is Result.Loading -> {
                 Box(

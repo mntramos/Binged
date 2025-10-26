@@ -20,11 +20,11 @@ interface ShowDao {
     suspend fun insertShow(show: ShowEntity)
 
     @Delete
-    suspend fun deleteShow(show: ShowEntity)
+    suspend fun deleteShow(show: ShowEntity): Int
 
     @Query("UPDATE shows SET isFavorite = :isFavorite WHERE id = :id")
-    suspend fun updateFavoriteStatus(id: Int, isFavorite: Boolean)
+    suspend fun updateFavoriteStatus(id: Int, isFavorite: Boolean): Int
 
     @Query("UPDATE shows SET isWatching = :isWatching WHERE id = :id")
-    suspend fun updateWatchingStatus(id: Int, isWatching: Boolean)
+    suspend fun updateWatchingStatus(id: Int, isWatching: Boolean): Int
 }

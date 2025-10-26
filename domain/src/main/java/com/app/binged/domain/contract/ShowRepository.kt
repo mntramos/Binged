@@ -9,7 +9,7 @@ interface ShowRepository {
     suspend fun searchShows(query: String): Result<List<Show>>
     suspend fun getShowDetails(id: Int): Result<Show>
     suspend fun saveShow(show: Show)
-    suspend fun deleteShow(show: Show)
-    suspend fun updateFavoriteStatus(show: Show, isFavorite: Boolean)
-    suspend fun updateWatchingStatus(show: Show, isWatching: Boolean)
+    suspend fun deleteShow(show: Show): Int
+    suspend fun updateFavoriteStatus(show: Show, isFavorite: Boolean): Int
+    suspend fun updateWatchingStatus(show: Show, isWatching: Boolean): Int
 }
