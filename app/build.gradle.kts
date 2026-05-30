@@ -38,6 +38,15 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("${rootDir}/keystore/binged-keystore.jks")
+            storePassword = "binged123"
+            keyAlias = "binged-key"
+            keyPassword = "binged123"
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
