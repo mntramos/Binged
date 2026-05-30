@@ -1,6 +1,7 @@
 package com.app.binged.feature.diary.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,11 +27,15 @@ import coil.compose.AsyncImage
 import com.app.binged.domain.model.Episode
 
 @Composable
-fun DiaryItem(episode: Episode) {
+fun DiaryItem(
+    episode: Episode,
+    onClick: (Int, Int, Int) -> Unit
+) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = { onClick(episode.showId, episode.seasonNumber, episode.episodeNumber) })
     ) {
         AsyncImage(
             model = "https://image.tmdb.org/t/p/w500${episode.stillPath}",
@@ -40,7 +44,6 @@ fun DiaryItem(episode: Episode) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(150.dp)
-                .graphicsLayer { alpha = 0.6f }
                 .drawWithContent {
                     drawContent()
                     drawRect(
@@ -61,7 +64,7 @@ fun DiaryItem(episode: Episode) {
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             Text(
-                text = episode.watchedDate.date.toString(),
+                text = java.text.SimpleDateFormat("dd", java.util.Locale.getDefault()).format(episode.watchedDate),
                 modifier = Modifier
                     .size(40.dp)
                     .background(
@@ -74,10 +77,15 @@ fun DiaryItem(episode: Episode) {
             )
             Column {
                 Text(text = episode.title, fontWeight = FontWeight.Bold, maxLines = 2)
-                Text(text = episode.showName, style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = episode.showName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Text(
                     text = episode.getIdentifier(),
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

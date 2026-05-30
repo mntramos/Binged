@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.outlined.RemoveRedEye
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -39,6 +40,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -57,21 +59,21 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.app.binged.core.utils.Result
 import com.app.binged.core.utils.UiEvent
 import com.app.binged.feature.shows.viewmodel.ShowDetailViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 
 @Composable
 fun ShowDetailScreen(
     showId: Int,
     onLogEpisodeClick: (Int, String) -> Unit,
+    onEpisodeClick: (Int, Int, Int) -> Unit,
     onBack: () -> Unit,
-    viewModel: ShowDetailViewModel = koinViewModel()
+    viewModel: ShowDetailViewModel = hiltViewModel()
 ) {
     LaunchedEffect(showId) {
         viewModel.loadShowDetails(showId)
@@ -86,7 +88,7 @@ fun ShowDetailScreen(
     var showName by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
-    var snackbarJob by remember { mutableStateOf<Job?>(null) }
+    var showUntrackDialog by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
 
@@ -100,12 +102,7 @@ fun ShowDetailScreen(
     LaunchedEffect("snackbar") {
         viewModel.uiEvent.collect { event ->
             when (event) {
-                is UiEvent.ShowSnackbar -> {
-                    snackbarJob?.cancel()
-                    snackbarJob = launch {
-                        snackbarHostState.showSnackbar(event.message)
-                    }
-                }
+                is UiEvent.ShowSnackbar -> launch { snackbarHostState.showSnackbar(event.message) }
             }
         }
     }
@@ -114,16 +111,12 @@ fun ShowDetailScreen(
     val appBarHeight = 56.dp
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val imageHeight = headerHeight + appBarHeight
-    val parallaxFactor = 0.3f
-    val titleVisibilityThreshold = headerHeight.value * 0.7f
 
-    val showTitleInAppBar = scrollState.value > titleVisibilityThreshold
+    val showTitleInAppBar = scrollState.value > (headerHeight.value * 0.7f)
 
     val parallaxOffset = with(LocalDensity.current) {
-        (scrollState.value * parallaxFactor).toDp()
+        (scrollState.value * 0.3f).toDp()
     }
-
-    val appBarAlpha = (scrollState.value.coerceAtMost(200) / 200f).coerceIn(0f, 0.95f)
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -136,19 +129,13 @@ fun ShowDetailScreen(
 
         when (showState) {
             is Result.Loading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
 
             is Result.Error -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Error loading show details")
                 }
             }
@@ -156,7 +143,28 @@ fun ShowDetailScreen(
             is Result.Success -> {
                 val show = (showState as Result.Success).data
 
-                Box(modifier = Modifier.fillMaxSize()) {
+    if (showUntrackDialog) {
+        AlertDialog(
+            onDismissRequest = { showUntrackDialog = false },
+            title = { Text("Remove Show") },
+            text = { Text("Remove ${(showState as? Result.Success)?.data?.name ?: "this show"} and all its episodes from your library?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showUntrackDialog = false
+                    viewModel.untrackShow()
+                }) {
+                    Text("Remove", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUntrackDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -196,18 +204,20 @@ fun ShowDetailScreen(
                             }
 
                             Row(
-                                modifier = Modifier.padding(top = 16.dp),
+                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = show.firstAirDate.take(4),
-                                    style = MaterialTheme.typography.bodyMedium
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
 
                                 val seasonLabel = if (show.seasonCount == 1) "season" else "seasons"
                                 Text(
                                     text = " • ${show.seasonCount} $seasonLabel",
-                                    style = MaterialTheme.typography.bodyMedium
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
 
                                 Spacer(modifier = Modifier.weight(1f))
@@ -219,7 +229,6 @@ fun ShowDetailScreen(
                                         style = MaterialTheme.typography.headlineMedium,
                                         fontWeight = FontWeight.Bold
                                     )
-
                                     Row(modifier = Modifier.padding(start = 8.dp)) {
                                         repeat(5) { index ->
                                             val isFilled = index < (show.rating / 2).toInt()
@@ -239,41 +248,53 @@ fun ShowDetailScreen(
                                     text = show.tagline,
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontStyle = FontStyle.Italic,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(top = 16.dp)
                                 )
                             }
 
                             ExpandableText(text = show.overview)
-
-                            if (isTracked && episodes.isNotEmpty()) {
-                                Text(
-                                    text = "Your Watched Episodes",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
-                                )
-
-                                episodes.groupBy { it.seasonNumber }.forEach { (season, seasonEpisodes) ->
-                                    Text(
-                                        text = "Season $season",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
-                                    )
-
-                                    seasonEpisodes.distinctBy { it.episodeId }.forEach { episode ->
-                                        EpisodeItem(
-                                            episode = episode,
-                                            onLongClick = { viewModel.deleteEpisode(episode) }
-                                        )
-                                    }
-                                }
-                            } else if (isTracked) {
-                                Text(
-                                    text = "You haven't logged any episodes yet.",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    modifier = Modifier.padding(top = 24.dp, bottom = 16.dp)
-                                )
-                            }
                         }
+
+                        if (isTracked && episodes.isNotEmpty()) {
+                            Text(
+                                text = "Watched Episodes",
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 8.dp)
+                            )
+
+                            episodes.groupBy { it.seasonNumber }.forEach { (season, seasonEpisodes) ->
+                                Text(
+                                    text = "Season $season",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
+                                )
+                                seasonEpisodes.distinctBy { it.episodeId }.forEach { episode ->
+                                    EpisodeItem(
+                                        episode = episode,
+                                        onClick = { onEpisodeClick(showId, episode.seasonNumber, episode.episodeNumber) },
+                                        onLongClick = { viewModel.deleteEpisode(episode) }
+                                    )
+                                }
+                            }
+                        } else if (isTracked) {
+                            Text(
+                                text = "You haven't logged any episodes yet.",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 16.dp)
+                            )
+                        } else {
+                            Text(
+                                text = "Track this show to start logging episodes.",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 16.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(80.dp))
                     }
 
                     Box(
@@ -290,7 +311,7 @@ fun ShowDetailScreen(
                                         )
                                     )
                                 else
-                                    SolidColor(MaterialTheme.colorScheme.surface.copy(alpha = appBarAlpha))
+                                    SolidColor(MaterialTheme.colorScheme.surface.copy(alpha = 0.95f))
                             )
                     ) {
                         Row(
@@ -329,16 +350,13 @@ fun ShowDetailScreen(
 
                             IconButton(
                                 onClick = {
-                                    if (isTracked) {
-                                        viewModel.untrackShow()
-                                    } else {
-                                        viewModel.trackShow()
-                                    }
+                                    if (isTracked) showUntrackDialog = true
+                                    else viewModel.trackShow()
                                 }
                             ) {
                                 Icon(
                                     imageVector = if (isTracked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                    contentDescription = if (isTracked) "Untrack show" else "Track show",
+                                    contentDescription = if (isTracked) "Untrack" else "Track",
                                     tint = if (scrollState.value < 50) Color.White else LocalContentColor.current
                                 )
                             }
@@ -352,37 +370,33 @@ fun ShowDetailScreen(
                                             tint = if (scrollState.value < 50) Color.White else LocalContentColor.current
                                         )
                                     }
-
                                     DropdownMenu(
                                         expanded = expanded,
                                         onDismissRequest = { expanded = false }
                                     ) {
                                         DropdownMenuItem(
-                                            text = { Text(if (isWatching) "Remove from currently watching" else "Mark as watching") },
+                                            text = { Text(if (isWatching) "Stop Watching" else "Mark as Watching") },
                                             onClick = { viewModel.updateWatchingStatus(isWatching.not()) },
                                             leadingIcon = {
                                                 Icon(
                                                     imageVector = if (isWatching) Icons.Default.RemoveRedEye else Icons.Outlined.RemoveRedEye,
-                                                    contentDescription = if (isWatching) "Unwatch show" else "Watch show"
+                                                    contentDescription = null
                                                 )
                                             }
                                         )
-
                                         DropdownMenuItem(
-                                            text = { Text(if (isFavorite) "Remove from favorites" else "Mark as favorite") },
+                                            text = { Text(if (isFavorite) "Remove from Favorites" else "Add to Favorites") },
                                             onClick = { viewModel.updateFavoriteStatus(isFavorite.not()) },
                                             leadingIcon = {
                                                 Icon(
-                                                    imageVector = if (isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
-                                                    contentDescription = if (isFavorite) "Unfavorite show" else "Favorite show"
+                                                    imageVector = if (isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder,
+                                                    contentDescription = null
                                                 )
                                             }
                                         )
                                     }
                                 }
-
                             }
-
                         }
                     }
 

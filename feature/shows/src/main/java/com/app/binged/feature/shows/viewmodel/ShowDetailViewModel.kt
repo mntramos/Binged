@@ -14,6 +14,7 @@ import com.app.binged.domain.usecase.TrackShowUseCase
 import com.app.binged.domain.usecase.UntrackShowUseCase
 import com.app.binged.domain.usecase.UpdateFavoriteStatusUseCase
 import com.app.binged.domain.usecase.UpdateWatchingStatusUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,8 +22,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ShowDetailViewModel(
+@HiltViewModel
+class ShowDetailViewModel @Inject constructor(
     private val getShowDetailsUseCase: GetShowDetailsUseCase,
     private val getEpisodesForShowUseCase: GetEpisodesForShowUseCase,
     private val trackShowUseCase: TrackShowUseCase,
@@ -39,6 +42,18 @@ class ShowDetailViewModel(
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
+    private val _episodes = MutableStateFlow<List<Episode>>(emptyList())
+    val episodes: StateFlow<List<Episode>> = _episodes
+
+    private val _isTracked = MutableStateFlow(false)
+    val isTracked: StateFlow<Boolean> = _isTracked
+
+    private val _isWatching = MutableStateFlow(false)
+    val isWatching: StateFlow<Boolean> = _isWatching
+
+    private val _isFavorite = MutableStateFlow(false)
+    val isFavorite: StateFlow<Boolean> = _isFavorite
+
     private val trackedShows = getTrackedShowsUseCase()
         .stateIn(
             scope = viewModelScope,
@@ -46,71 +61,49 @@ class ShowDetailViewModel(
             initialValue = emptyList()
         )
 
-    val isTracked = MutableStateFlow(false)
-    val isWatching = MutableStateFlow(false)
-    val isFavorite = MutableStateFlow(false)
-
-    val episodes: StateFlow<List<Episode>> = MutableStateFlow(emptyList())
+    private var currentShow: Show? = null
+    private var currentShowId: Int = 0
 
     fun loadShowDetails(showId: Int) {
+        if (currentShowId == showId && _showDetails.value !is Result.Loading) return
+        currentShowId = showId
+
         viewModelScope.launch {
             _showDetails.value = Result.Loading
+            val result = getShowDetailsUseCase(showId)
+            _showDetails.value = result
 
-            try {
-                val result = getShowDetailsUseCase(showId)
-                _showDetails.value = result
-
-                if (result is Result.Success) {
-                    checkIfShowIsTracked(result.data)
-                    checkIfShowIsWatching(result.data)
-                    checkIfShowIsFavorite(result.data)
-                    loadEpisodes(showId)
-                }
-            } catch (e: Exception) {
-                _showDetails.value = Result.Error(e)
+            if (result is Result.Success) {
+                currentShow = result.data
+                observeTrackedState(result.data)
             }
         }
-    }
 
-    private fun checkIfShowIsTracked(show: Show) {
-        viewModelScope.launch {
-            trackedShows.collect { shows ->
-                isTracked.value = shows.any { it.id == show.id }
-            }
-        }
-    }
-
-    private fun checkIfShowIsWatching(show: Show) {
-        viewModelScope.launch {
-            trackedShows.collect { shows ->
-                isWatching.value = shows.firstOrNull { it.id == show.id }?.isWatching ?: false
-            }
-        }
-    }
-
-    private fun checkIfShowIsFavorite(show: Show) {
-        viewModelScope.launch {
-            trackedShows.collect { shows ->
-                isFavorite.value = shows.firstOrNull { it.id == show.id }?.isFavorite ?: false
-            }
-        }
-    }
-
-    private fun loadEpisodes(showId: Int) {
         viewModelScope.launch {
             getEpisodesForShowUseCase(showId).collect { loadedEpisodes ->
-                (episodes as MutableStateFlow).value = loadedEpisodes
+                _episodes.value = loadedEpisodes
+            }
+        }
+    }
+
+    private fun observeTrackedState(show: Show) {
+        viewModelScope.launch {
+            trackedShows.collect { shows ->
+                val tracked = shows.find { it.id == show.id }
+                _isTracked.value = tracked != null
+                _isWatching.value = tracked?.isWatching ?: false
+                _isFavorite.value = tracked?.isFavorite ?: false
             }
         }
     }
 
     fun trackShow() {
         viewModelScope.launch {
-            val show = (_showDetails.value as? Result.Success)?.data ?: return@launch
+            val show = currentShow ?: return@launch
             try {
                 trackShowUseCase(show)
-                isTracked.value = true
-                _uiEvent.emit(UiEvent.ShowSnackbar("Successfully added ${show.name}"))
+                _isTracked.value = true
+                _uiEvent.emit(UiEvent.ShowSnackbar("Added ${show.name}"))
             } catch (_: Exception) {
                 _uiEvent.emit(UiEvent.ShowSnackbar("Failed to add ${show.name}"))
             }
@@ -119,11 +112,11 @@ class ShowDetailViewModel(
 
     fun untrackShow() {
         viewModelScope.launch {
-            val show = (_showDetails.value as? Result.Success)?.data ?: return@launch
-            val untrackShow = untrackShowUseCase(show)
-            if (untrackShow > 0) {
-                isTracked.value = false
-                _uiEvent.emit(UiEvent.ShowSnackbar("Successfully removed ${show.name}"))
+            val show = currentShow ?: return@launch
+            val result = untrackShowUseCase(show)
+            if (result > 0) {
+                _isTracked.value = false
+                _uiEvent.emit(UiEvent.ShowSnackbar("Removed ${show.name}"))
             } else {
                 _uiEvent.emit(UiEvent.ShowSnackbar("Failed to remove ${show.name}"))
             }
@@ -132,31 +125,29 @@ class ShowDetailViewModel(
 
     fun updateWatchingStatus(status: Boolean) {
         viewModelScope.launch {
-            val show = (_showDetails.value as? Result.Success)?.data ?: return@launch
+            val show = currentShow ?: return@launch
             val result = updateWatchingStatusUseCase(show, status)
             if (result <= 0) {
-                _uiEvent.emit(UiEvent.ShowSnackbar("Failed to perform action"))
+                _uiEvent.emit(UiEvent.ShowSnackbar("Failed to update watching status"))
                 return@launch
             }
-
-            isWatching.value = status
-            val message = if (status) "Added to currently watching" else "Removed from currently watching"
-            _uiEvent.emit(UiEvent.ShowSnackbar(message))
+            _isWatching.value = status
+            val msg = if (status) "Marked as watching" else "Removed from watching"
+            _uiEvent.emit(UiEvent.ShowSnackbar(msg))
         }
     }
 
     fun updateFavoriteStatus(status: Boolean) {
         viewModelScope.launch {
-            val show = (_showDetails.value as? Result.Success)?.data ?: return@launch
+            val show = currentShow ?: return@launch
             val result = updateFavoriteStatusUseCase(show, status)
             if (result <= 0) {
-                _uiEvent.emit(UiEvent.ShowSnackbar("Failed to perform action"))
+                _uiEvent.emit(UiEvent.ShowSnackbar("Failed to update favorite"))
                 return@launch
             }
-
-            isFavorite.value = status
-            val message = if (status) "Added to favorites" else "Removed from favorites"
-            _uiEvent.emit(UiEvent.ShowSnackbar(message))
+            _isFavorite.value = status
+            val msg = if (status) "Added to favorites" else "Removed from favorites"
+            _uiEvent.emit(UiEvent.ShowSnackbar(msg))
         }
     }
 

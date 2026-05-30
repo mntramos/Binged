@@ -17,15 +17,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.app.binged.domain.model.Episode
-import java.util.Date
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EpisodeItem(
     episode: Episode,
+    onClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -34,7 +33,7 @@ fun EpisodeItem(
         modifier = modifier
             .fillMaxWidth()
             .combinedClickable(
-                onClick = {},
+                onClick = onClick,
                 onLongClick = onLongClick
             )
     ) {
@@ -60,20 +59,4 @@ fun EpisodeItem(
             Text(text = episode.title, fontWeight = FontWeight.Bold, maxLines = 2)
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun EpisodeItemPreview() {
-    val episode = Episode(
-        episodeId = 123456,
-        showId = 3946240,
-        showName = "Frieren: Beyond Journey's End",
-        seasonNumber = 1,
-        episodeNumber = 1,
-        title = "The Journey's End",
-        watchedDate = Date(),
-        stillPath = "/zVobco2BeS830uaUYOhtMnod9WX.jpg"
-    )
-    EpisodeItem(episode, {})
 }

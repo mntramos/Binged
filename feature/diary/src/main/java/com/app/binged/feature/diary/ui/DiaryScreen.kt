@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -20,26 +21,25 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.binged.feature.diary.viewmodel.DiaryViewModel
-import org.koin.androidx.compose.koinViewModel
 import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DiaryScreen(
+    onEpisodeClick: (showId: Int, season: Int, episode: Int) -> Unit,
     onBack: () -> Unit,
-    viewModel: DiaryViewModel = koinViewModel()
+    viewModel: DiaryViewModel = hiltViewModel()
 ) {
     val episodes by viewModel.episodes.collectAsState()
 
-    val groupedEntries = episodes
-        .sortedByDescending { it.watchedDate }
-        .groupBy { episode ->
-            val date = episode.watchedDate.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate()
-            date.year to date.month.name
-        }
+    val groupedEntries = episodes.groupBy { episode ->
+        val date = episode.watchedDate.toInstant()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+        date.year to date.month.name
+    }
 
     Scaffold(
         topBar = {
@@ -52,9 +52,9 @@ fun DiaryScreen(
                             contentDescription = "Go back"
                         )
                     }
-                },
+                }
             )
-        },
+        }
     ) { paddingValues ->
         if (groupedEntries.isEmpty()) {
             Box(
@@ -65,7 +65,8 @@ fun DiaryScreen(
             ) {
                 Text(
                     text = "Start watching!",
-                    modifier = Modifier.padding(top = paddingValues.calculateTopPadding())
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         } else {
@@ -78,12 +79,17 @@ fun DiaryScreen(
                         bottom = paddingValues.calculateBottomPadding()
                     )
             ) {
-                groupedEntries.forEach { (year, month), episodes ->
+                groupedEntries.forEach { (year, month), entries ->
                     stickyHeader {
                         MonthHeader(year, month)
                     }
-                    items(episodes) { episode ->
-                        DiaryItem(episode)
+                    items(entries, key = { it.id }) { episode ->
+                        DiaryItem(
+                            episode = episode,
+                            onClick = { showId, season, episodeNumber ->
+                                onEpisodeClick(showId, season, episodeNumber)
+                            }
+                        )
                     }
                 }
             }
