@@ -9,8 +9,11 @@ import com.app.binged.domain.contract.EpisodeRepository
 import com.app.binged.domain.model.Episode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class EpisodeRepositoryImpl(
+@Singleton
+class EpisodeRepositoryImpl @Inject constructor(
     private val episodeDao: EpisodeDao,
     private val tmdbService: TmdbService
 ) : EpisodeRepository {
@@ -30,10 +33,14 @@ class EpisodeRepositoryImpl(
     override suspend fun getEpisodeDetails(id: Int, season: Int, episode: Int): Result<Episode> {
         return try {
             val response = tmdbService.getEpisodeDetails(id, season, episode)
-            Result.Success(response.toDomain())
+            Result.Success(response.toDomain(showId = id))
         } catch (e: Exception) {
             Result.Error(e)
         }
+    }
+
+    override suspend fun getLocalEpisode(showId: Int, seasonNumber: Int, episodeNumber: Int): Episode? {
+        return episodeDao.getLocalEpisode(showId, seasonNumber, episodeNumber)?.toDomain()
     }
 
     override suspend fun saveEpisode(episode: Episode): Long {
@@ -41,6 +48,6 @@ class EpisodeRepositoryImpl(
     }
 
     override suspend fun deleteEpisode(episode: Episode) {
-        episodeDao.deleteEpisode(episode.toEntity())
+        episodeDao.deleteEpisodeById(episode.episodeId, episode.showId)
     }
 }

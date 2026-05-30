@@ -2,6 +2,7 @@ package com.app.binged.data.repository
 
 import com.app.binged.core.utils.Result
 import com.app.binged.data.api.TmdbService
+import com.app.binged.data.database.dao.EpisodeDao
 import com.app.binged.data.database.dao.ShowDao
 import com.app.binged.data.mapper.toDomain
 import com.app.binged.data.mapper.toEntity
@@ -9,11 +10,16 @@ import com.app.binged.domain.contract.ShowRepository
 import com.app.binged.domain.model.Show
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ShowRepositoryImpl(
+@Singleton
+class ShowRepositoryImpl @Inject constructor(
     private val showDao: ShowDao,
+    private val episodeDao: EpisodeDao,
     private val tmdbService: TmdbService
 ) : ShowRepository {
+
     override fun getTrackedShows(): Flow<List<Show>> {
         return showDao.getAllShows().map { entities ->
             entities.map { it.toDomain() }
@@ -38,11 +44,21 @@ class ShowRepositoryImpl(
         }
     }
 
+    override suspend fun getPopularShows(): Result<List<Show>> {
+        return try {
+            val response = tmdbService.getPopularShows()
+            Result.Success(response.results.map { it.toDomain() })
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
     override suspend fun saveShow(show: Show) {
         showDao.insertShow(show.toEntity())
     }
 
     override suspend fun deleteShow(show: Show): Int {
+        episodeDao.deleteEpisodesByShow(show.id)
         return showDao.deleteShow(show.toEntity())
     }
 

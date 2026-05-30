@@ -8,7 +8,6 @@ import com.app.binged.domain.model.Episode
 import com.app.binged.domain.model.Show
 import java.util.Date
 
-// Show mappers
 fun TmdbShowResponse.toDomain(): Show {
     return Show(
         id = id,
@@ -53,18 +52,21 @@ fun Show.toEntity(): ShowEntity {
     )
 }
 
-// Episode mappers
-fun TmdbEpisodeResponse.toDomain(): Episode {
+fun TmdbEpisodeResponse.toDomain(showId: Int = 0, showName: String = ""): Episode {
     return Episode(
         episodeId = id,
-        showId = 0,
-        showName = "",
+        showId = showId,
+        showName = showName,
         seasonNumber = seasonNumber,
         episodeNumber = episodeNumber,
         title = name,
         watchedDate = Date(),
         stillPath = stillPath,
-        notes = ""
+        notes = "",
+        overview = overview,
+        airDate = airDate,
+        voteAverage = voteAverage,
+        runtime = runtime ?: 0
     )
 }
 

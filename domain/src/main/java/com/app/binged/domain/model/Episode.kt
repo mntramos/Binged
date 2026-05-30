@@ -12,7 +12,11 @@ data class Episode(
     val title: String,
     val watchedDate: Date,
     val stillPath: String?,
-    val notes: String? = null
+    val notes: String? = null,
+    val overview: String = "",
+    val airDate: String = "",
+    val voteAverage: Double = 0.0,
+    val runtime: Int = 0
 ) {
     fun getIdentifier(): String {
         val season = seasonNumber.toString().padStart(2, '0')

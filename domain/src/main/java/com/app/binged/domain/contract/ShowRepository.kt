@@ -8,6 +8,7 @@ interface ShowRepository {
     fun getTrackedShows(): Flow<List<Show>>
     suspend fun searchShows(query: String): Result<List<Show>>
     suspend fun getShowDetails(id: Int): Result<Show>
+    suspend fun getPopularShows(): Result<List<Show>>
     suspend fun saveShow(show: Show)
     suspend fun deleteShow(show: Show): Int
     suspend fun updateFavoriteStatus(show: Show, isFavorite: Boolean): Int
