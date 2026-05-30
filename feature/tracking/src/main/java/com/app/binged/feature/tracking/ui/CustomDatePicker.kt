@@ -7,7 +7,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import java.util.Calendar
 import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -17,9 +16,6 @@ fun CustomDatePicker(
     onDateSelected: (Date) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val calendar = Calendar.getInstance()
-    calendar.time = initialDate
-
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = initialDate.time
     )
@@ -30,22 +26,15 @@ fun CustomDatePicker(
             TextButton(
                 onClick = {
                     datePickerState.selectedDateMillis?.let { timeInMillis ->
-                        val selectedDate = Date(timeInMillis)
-                        onDateSelected(selectedDate)
+                        onDateSelected(Date(timeInMillis))
                     } ?: onDismiss()
                 }
-            ) {
-                Text("OK")
-            }
+            ) { Text("OK") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
+            TextButton(onClick = onDismiss) { Text("Cancel") }
         }
     ) {
-        DatePicker(
-            state = datePickerState
-        )
+        DatePicker(state = datePickerState)
     }
 }
