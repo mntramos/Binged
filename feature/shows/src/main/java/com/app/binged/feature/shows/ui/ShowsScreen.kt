@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -26,19 +27,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.binged.feature.shows.viewmodel.ShowsViewModel
-import com.app.binged.shows.R
-import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShowsScreen(
     onShowClick: (Int) -> Unit,
     onSearchClick: () -> Unit,
-    onActionClick: () -> Unit,
-    viewModel: ShowsViewModel = koinViewModel()
+    onDiaryClick: () -> Unit,
+    viewModel: ShowsViewModel = hiltViewModel()
 ) {
     val shows by viewModel.shows.collectAsState()
     val watching = shows.filter { it.isWatching }
@@ -49,10 +48,10 @@ fun ShowsScreen(
             TopAppBar(
                 title = { Text("Library") },
                 actions = {
-                    IconButton(onClick = onActionClick) {
+                    IconButton(onClick = onDiaryClick) {
                         Icon(
-                            painter = painterResource(R.drawable.material_symbols_outlined_book_2),
-                            contentDescription = "Search Shows"
+                            imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                            contentDescription = "Open Diary"
                         )
                     }
                 }
@@ -62,7 +61,7 @@ fun ShowsScreen(
             FloatingActionButton(onClick = onSearchClick) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Add shows"
+                    contentDescription = "Search shows"
                 )
             }
         }
@@ -74,7 +73,11 @@ fun ShowsScreen(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                Text("You're not tracking any shows yet.")
+                Text(
+                    text = "You're not tracking any shows yet.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         } else {
             LazyVerticalGrid(
@@ -83,7 +86,7 @@ fun ShowsScreen(
                     .fillMaxSize()
                     .padding(
                         top = paddingValues.calculateTopPadding(),
-                       bottom = paddingValues.calculateBottomPadding()
+                        bottom = paddingValues.calculateBottomPadding()
                     ),
                 contentPadding = PaddingValues(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),

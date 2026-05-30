@@ -11,7 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,8 +30,10 @@ import com.app.binged.domain.model.Show
 @Composable
 fun SearchResultItem(
     show: Show,
+    isAlreadyTracked: Boolean,
     onClick: () -> Unit,
-    onAddClick: () -> Unit
+    onTrackClick: () -> Unit,
+    onUntrackClick: () -> Unit
 ) {
     Column {
         Row(
@@ -77,14 +80,18 @@ fun SearchResultItem(
                 )
             }
 
-            IconButton(onClick = onAddClick) {
+            IconButton(
+                onClick = if (isAlreadyTracked) onUntrackClick else onTrackClick
+            ) {
                 Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add show"
+                    imageVector = if (isAlreadyTracked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                    contentDescription = if (isAlreadyTracked) "Remove show" else "Add show",
+                    tint = if (isAlreadyTracked) MaterialTheme.colorScheme.primary
+                           else MaterialTheme.colorScheme.onSurface
                 )
             }
         }
-        Spacer(modifier = Modifier.size(16.dp))
         HorizontalDivider()
+        Spacer(modifier = Modifier.size(8.dp))
     }
 }

@@ -20,19 +20,21 @@ fun MonthHeader(year: Int, month: String) {
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.secondaryContainer)
-            .padding(8.dp)
+            .padding(12.dp)
     ) {
         Row {
             Text(
                 text = month,
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
             )
             Spacer(modifier = Modifier.size(8.dp))
             Text(
                 text = year.toString(),
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
             )
         }
     }

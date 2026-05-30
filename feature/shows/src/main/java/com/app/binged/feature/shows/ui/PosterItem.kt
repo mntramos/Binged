@@ -23,8 +23,8 @@ fun PosterItem(
 ) {
     Box(
         modifier = Modifier
-            .width(120.dp) // Width remains constant
-            .height(180.dp) // Height follows 2:3 ratio (120 * 1.5 = 180)
+            .width(120.dp)
+            .height(180.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(Color.LightGray)
             .clickable(onClick = onClick)

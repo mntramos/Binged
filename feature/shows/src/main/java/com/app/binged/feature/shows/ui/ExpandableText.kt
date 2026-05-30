@@ -17,17 +17,14 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ExpandableText(
     text: String,
-    maxChars: Int = 200,  // adjust the limit as needed
+    maxChars: Int = 200,
     style: TextStyle = MaterialTheme.typography.bodyMedium
 ) {
     var expanded by remember { mutableStateOf(false) }
     val displayText = if (expanded || text.length <= maxChars) text else text.take(maxChars) + "..."
 
     Column(modifier = Modifier.padding(vertical = 16.dp)) {
-        Text(
-            text = displayText,
-            style = style
-        )
+        Text(text = displayText, style = style, color = MaterialTheme.colorScheme.onSurface)
         if (text.length > maxChars) {
             Text(
                 text = if (expanded) "See less" else "See more",
