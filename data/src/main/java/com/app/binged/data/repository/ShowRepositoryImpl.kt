@@ -69,4 +69,8 @@ class ShowRepositoryImpl @Inject constructor(
     override suspend fun updateWatchingStatus(show: Show, isWatching: Boolean): Int {
         return showDao.updateWatchingStatus(show.id, isWatching)
     }
+
+    override suspend fun deleteAll() {
+        showDao.deleteAll()
+    }
 }

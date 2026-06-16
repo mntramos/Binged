@@ -27,4 +27,7 @@ interface ShowDao {
 
     @Query("UPDATE shows SET isWatching = :isWatching WHERE id = :id")
     suspend fun updateWatchingStatus(id: Int, isWatching: Boolean): Int
+
+    @Query("DELETE FROM shows")
+    suspend fun deleteAll()
 }

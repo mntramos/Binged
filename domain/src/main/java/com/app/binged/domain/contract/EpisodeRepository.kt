@@ -11,4 +11,5 @@ interface EpisodeRepository {
     suspend fun getLocalEpisode(showId: Int, seasonNumber: Int, episodeNumber: Int): Episode?
     suspend fun saveEpisode(episode: Episode): Long
     suspend fun deleteEpisode(episode: Episode)
+    suspend fun deleteAll()
 }

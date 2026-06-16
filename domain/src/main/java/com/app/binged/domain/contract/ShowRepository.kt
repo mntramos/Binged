@@ -13,4 +13,5 @@ interface ShowRepository {
     suspend fun deleteShow(show: Show): Int
     suspend fun updateFavoriteStatus(show: Show, isFavorite: Boolean): Int
     suspend fun updateWatchingStatus(show: Show, isWatching: Boolean): Int
+    suspend fun deleteAll()
 }
