@@ -1,13 +1,11 @@
 package com.app.binged.feature.settings.ui
 
-import android.content.ContentValues
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
-import android.provider.OpenableColumns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.binged.core.utils.Result
+import com.app.binged.data.sync.SyncManager
 import com.app.binged.domain.contract.AuthRepository
 import com.app.binged.domain.contract.EpisodeRepository
 import com.app.binged.domain.contract.ShowRepository
@@ -15,7 +13,6 @@ import com.app.binged.domain.model.Episode
 import com.app.binged.domain.model.Show
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -43,7 +40,6 @@ data class ExportData(
 sealed interface SettingsUiState {
     data object Idle : SettingsUiState
     data object Loading : SettingsUiState
-    data class Error(val message: String) : SettingsUiState
 }
 
 sealed interface SettingsEvent {
@@ -57,6 +53,7 @@ class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val showRepository: ShowRepository,
     private val episodeRepository: EpisodeRepository,
+    private val syncManager: SyncManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -82,6 +79,7 @@ class SettingsViewModel @Inject constructor(
 
     fun signOut() {
         viewModelScope.launch {
+            syncManager.stopListening()
             authRepository.signOut()
         }
     }
@@ -89,6 +87,8 @@ class SettingsViewModel @Inject constructor(
     fun deleteAccount() {
         viewModelScope.launch {
             _uiState.value = SettingsUiState.Loading
+            syncManager.deleteAll()
+            syncManager.stopListening()
             showRepository.deleteAll()
             episodeRepository.deleteAll()
             when (val result = authRepository.deleteAccount()) {
@@ -97,9 +97,13 @@ class SettingsViewModel @Inject constructor(
                     authRepository.signOut()
                 }
                 is Result.Error -> {
-                    _uiState.value = SettingsUiState.Error(
-                        result.exception.message ?: "Failed to delete account"
+                    _uiState.value = SettingsUiState.Idle
+                    _events.emit(
+                        SettingsEvent.ShowError(
+                            result.exception.message ?: "Failed to delete account. You've been signed out — please log in again and retry."
+                        )
                     )
+                    authRepository.signOut()
                 }
                 is Result.Loading -> {}
             }
@@ -162,9 +166,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun clearError() {
-        _uiState.value = SettingsUiState.Idle
-    }
 }
 
 private class DateSerializer : com.google.gson.JsonSerializer<Date> {
