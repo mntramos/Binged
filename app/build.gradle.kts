@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
 }
 
 fun calculateVersionCode(versionName: String): Int {
@@ -49,8 +50,6 @@ android {
 
     buildTypes {
         debug {
-            applicationIdSuffix = ".debug"
-            versionNameSuffix = "-debug"
         }
         release {
             isMinifyEnabled = true
@@ -104,4 +103,6 @@ dependencies {
     implementation(project(":feature:search"))
     implementation(project(":feature:shows"))
     implementation(project(":feature:tracking"))
+    implementation(project(":feature:auth"))
+    implementation(project(":feature:settings"))
 }

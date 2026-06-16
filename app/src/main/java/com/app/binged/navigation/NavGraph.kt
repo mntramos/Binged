@@ -4,22 +4,62 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.app.binged.feature.auth.ui.AuthViewModel
+import com.app.binged.feature.auth.ui.LoginScreen
+import com.app.binged.feature.auth.ui.RegisterScreen
 import com.app.binged.feature.diary.ui.DiaryScreen
 import com.app.binged.feature.search.ui.SearchScreen
+import com.app.binged.feature.settings.ui.SettingsScreen
 import com.app.binged.feature.shows.ui.EpisodeDetailScreen
 import com.app.binged.feature.shows.ui.ShowDetailScreen
 import com.app.binged.feature.shows.ui.ShowsScreen
 import com.app.binged.feature.tracking.ui.LogEpisodeScreen
-import com.app.binged.navigation.Route
 
 @Composable
-fun NavGraph(
+fun BingedNavGraph(
+    mainViewModel: MainViewModel = hiltViewModel()
+) {
+    val isAuthenticated by mainViewModel.authState.collectAsState()
+
+    if (isAuthenticated) {
+        MainAppNav()
+    } else {
+        AuthNav()
+    }
+}
+
+@Composable
+fun AuthNav(
+    viewModel: AuthViewModel = hiltViewModel()
+) {
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = "login") {
+        composable("login") {
+            LoginScreen(
+                viewModel = viewModel,
+                onNavigateToRegister = { navController.navigate("register") }
+            )
+        }
+        composable("register") {
+            RegisterScreen(
+                viewModel = viewModel,
+                onNavigateToLogin = { navController.popBackStack() }
+            )
+        }
+    }
+}
+
+@Composable
+fun MainAppNav(
     navController: NavHostController = rememberNavController()
 ) {
     NavHost(
@@ -40,6 +80,9 @@ fun NavGraph(
                 },
                 onDiaryClick = {
                     navController.navigate(Route.Diary.path)
+                },
+                onSettingsClick = {
+                    navController.navigate(Route.Settings.path)
                 }
             )
         }
@@ -124,6 +167,12 @@ fun NavGraph(
             )
         ) {
             EpisodeDetailScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Route.Settings.path) {
+            SettingsScreen(
                 onBack = { navController.popBackStack() }
             )
         }

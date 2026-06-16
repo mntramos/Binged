@@ -21,4 +21,6 @@ sealed class Route(val path: String) {
         fun createRoute(showId: Int, season: Int, episode: Int, showName: String = "") =
             "episode_detail/$showId/$season/$episode?showName=$showName"
     }
+
+    data object Settings : Route("settings")
 }
