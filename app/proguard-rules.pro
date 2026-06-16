@@ -1,5 +1,6 @@
 # Preserve stack traces in crash reports
 -keepattributes SourceFile,LineNumberTable
+-keepattributes *Annotation*
 -renamesourcefileattribute SourceFile
 
 # Hilt / Dagger
