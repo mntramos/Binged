@@ -5,6 +5,7 @@ import com.app.binged.data.api.TmdbService
 import com.app.binged.data.database.dao.EpisodeDao
 import com.app.binged.data.mapper.toDomain
 import com.app.binged.data.mapper.toEntity
+import com.app.binged.data.sync.SyncManager
 import com.app.binged.domain.contract.EpisodeRepository
 import com.app.binged.domain.model.Episode
 import kotlinx.coroutines.flow.Flow
@@ -15,7 +16,8 @@ import javax.inject.Singleton
 @Singleton
 class EpisodeRepositoryImpl @Inject constructor(
     private val episodeDao: EpisodeDao,
-    private val tmdbService: TmdbService
+    private val tmdbService: TmdbService,
+    private val syncManager: SyncManager
 ) : EpisodeRepository {
 
     override fun getAllEpisodes(): Flow<List<Episode>> {
@@ -44,11 +46,16 @@ class EpisodeRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveEpisode(episode: Episode): Long {
-        return episodeDao.insertEpisode(episode.toEntity())
+        val entity = episode.toEntity()
+        val id = episodeDao.insertEpisode(entity)
+        val saved = entity.copy(id = id)
+        syncManager.pushEpisode(saved)
+        return id
     }
 
     override suspend fun deleteEpisode(episode: Episode) {
         episodeDao.deleteEpisodeById(episode.episodeId, episode.showId)
+        syncManager.deleteEpisode(episode.episodeId, episode.showId)
     }
 
     override suspend fun deleteAll() {

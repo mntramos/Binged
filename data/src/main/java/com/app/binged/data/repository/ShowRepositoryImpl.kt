@@ -6,6 +6,7 @@ import com.app.binged.data.database.dao.EpisodeDao
 import com.app.binged.data.database.dao.ShowDao
 import com.app.binged.data.mapper.toDomain
 import com.app.binged.data.mapper.toEntity
+import com.app.binged.data.sync.SyncManager
 import com.app.binged.domain.contract.ShowRepository
 import com.app.binged.domain.model.Show
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +18,8 @@ import javax.inject.Singleton
 class ShowRepositoryImpl @Inject constructor(
     private val showDao: ShowDao,
     private val episodeDao: EpisodeDao,
-    private val tmdbService: TmdbService
+    private val tmdbService: TmdbService,
+    private val syncManager: SyncManager
 ) : ShowRepository {
 
     override fun getTrackedShows(): Flow<List<Show>> {
@@ -54,20 +56,30 @@ class ShowRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveShow(show: Show) {
-        showDao.insertShow(show.toEntity())
+        val entity = show.toEntity()
+        showDao.insertShow(entity)
+        syncManager.pushShow(entity)
     }
 
     override suspend fun deleteShow(show: Show): Int {
         episodeDao.deleteEpisodesByShow(show.id)
-        return showDao.deleteShow(show.toEntity())
+        val result = showDao.deleteShow(show.toEntity())
+        syncManager.deleteShow(show.id)
+        return result
     }
 
     override suspend fun updateFavoriteStatus(show: Show, isFavorite: Boolean): Int {
-        return showDao.updateFavoriteStatus(show.id, isFavorite)
+        val result = showDao.updateFavoriteStatus(show.id, isFavorite)
+        val entity = show.toEntity().copy(isFavorite = isFavorite)
+        syncManager.pushShow(entity)
+        return result
     }
 
     override suspend fun updateWatchingStatus(show: Show, isWatching: Boolean): Int {
-        return showDao.updateWatchingStatus(show.id, isWatching)
+        val result = showDao.updateWatchingStatus(show.id, isWatching)
+        val entity = show.toEntity().copy(isWatching = isWatching)
+        syncManager.pushShow(entity)
+        return result
     }
 
     override suspend fun deleteAll() {

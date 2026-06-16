@@ -69,6 +69,7 @@ dependencies {
     implementation(libs.credentials.play.services.auth)
     implementation(libs.googleid)
 
+    implementation(project(":data"))
     implementation(project(":core"))
     implementation(project(":domain"))
 

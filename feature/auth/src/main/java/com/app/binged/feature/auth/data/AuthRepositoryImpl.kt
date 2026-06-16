@@ -102,6 +102,10 @@ class AuthRepositoryImpl @Inject constructor() : AuthRepository {
         }
     }
 
+    override suspend fun getCurrentUserId(): String? {
+        return auth.currentUser?.uid
+    }
+
     override suspend fun getCurrentUserEmail(): String? {
         return auth.currentUser?.email
     }

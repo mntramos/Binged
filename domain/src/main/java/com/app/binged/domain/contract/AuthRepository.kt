@@ -10,6 +10,7 @@ interface AuthRepository {
     suspend fun signInWithGoogle(idToken: String): Result<Unit>
     suspend fun signOut()
     suspend fun deleteAccount(): Result<Unit>
+    suspend fun getCurrentUserId(): String?
     suspend fun getCurrentUserEmail(): String?
     suspend fun sendEmailVerification(): Result<Unit>
     suspend fun isEmailVerified(): Boolean

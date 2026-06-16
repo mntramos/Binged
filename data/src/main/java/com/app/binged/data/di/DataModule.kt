@@ -6,14 +6,14 @@ import androidx.room.Room
 import com.app.binged.data.BuildConfig
 import com.app.binged.data.api.TmdbService
 import com.app.binged.data.database.AppDatabase
-import com.app.binged.data.database.MIGRATION_1_2
-import com.app.binged.data.database.MIGRATION_2_3
 import com.app.binged.data.database.dao.EpisodeDao
 import com.app.binged.data.database.dao.ShowDao
 import com.app.binged.data.repository.EpisodeRepositoryImpl
 import com.app.binged.data.repository.ShowRepositoryImpl
 import com.app.binged.domain.contract.EpisodeRepository
 import com.app.binged.domain.contract.ShowRepository
+import com.google.firebase.firestore.FirebaseFirestore
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,21 +32,24 @@ object DataModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
+    fun provideFirebaseFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
+
+    @Provides
+    @Singleton
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
-            "binged-db"
-        ).addMigrations(
-            MIGRATION_1_2,
-            MIGRATION_2_3
-        ).build()
+            "binged_db"
+        ).fallbackToDestructiveMigration().build()
     }
 
     @Provides
+    @Singleton
     fun provideShowDao(database: AppDatabase): ShowDao = database.showDao()
 
     @Provides
+    @Singleton
     fun provideEpisodeDao(database: AppDatabase): EpisodeDao = database.episodeDao()
 
     @Provides
@@ -85,19 +88,17 @@ object DataModule {
     fun provideTmdbService(retrofit: Retrofit): TmdbService {
         return retrofit.create(TmdbService::class.java)
     }
+}
 
-    @Provides
-    @Singleton
-    fun provideShowRepository(
-        showDao: ShowDao,
-        episodeDao: EpisodeDao,
-        tmdbService: TmdbService
-    ): ShowRepository = ShowRepositoryImpl(showDao, episodeDao, tmdbService)
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class DataBindModule {
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideEpisodeRepository(
-        episodeDao: EpisodeDao,
-        tmdbService: TmdbService
-    ): EpisodeRepository = EpisodeRepositoryImpl(episodeDao, tmdbService)
+    abstract fun bindShowRepository(impl: ShowRepositoryImpl): ShowRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindEpisodeRepository(impl: EpisodeRepositoryImpl): EpisodeRepository
 }

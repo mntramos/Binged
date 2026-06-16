@@ -3,6 +3,7 @@ package com.app.binged.feature.auth.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.binged.core.utils.Result
+import com.app.binged.data.sync.SyncManager
 import com.app.binged.domain.contract.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -16,7 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     private val _authResult = MutableSharedFlow<kotlin.Result<Unit>>()
@@ -28,7 +30,11 @@ class AuthViewModel @Inject constructor(
     fun login(email: String, password: String) {
         viewModelScope.launch {
             when (val result = authRepository.signInWithEmail(email, password)) {
-                is Result.Success -> _authResult.emit(kotlin.Result.success(Unit))
+                is Result.Success -> {
+                    syncManager.pullAll()
+                    syncManager.startListening()
+                    _authResult.emit(kotlin.Result.success(Unit))
+                }
                 is Result.Error -> _authResult.emit(kotlin.Result.failure(result.exception))
                 is Result.Loading -> {}
             }
@@ -48,7 +54,11 @@ class AuthViewModel @Inject constructor(
     fun signInWithGoogle(idToken: String) {
         viewModelScope.launch {
             when (val result = authRepository.signInWithGoogle(idToken)) {
-                is Result.Success -> _authResult.emit(kotlin.Result.success(Unit))
+                is Result.Success -> {
+                    syncManager.pullAll()
+                    syncManager.startListening()
+                    _authResult.emit(kotlin.Result.success(Unit))
+                }
                 is Result.Error -> _authResult.emit(kotlin.Result.failure(result.exception))
                 is Result.Loading -> {}
             }

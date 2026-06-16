@@ -51,6 +51,7 @@ dependencies {
 
     implementation(libs.gson)
 
+    implementation(project(":data"))
     implementation(project(":core"))
     implementation(project(":domain"))
 

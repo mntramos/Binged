@@ -16,8 +16,11 @@ interface ShowDao {
     @Query("SELECT * FROM shows WHERE id = :id")
     fun getShowById(id: Int): Flow<ShowEntity?>
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertShow(show: ShowEntity)
+
+    @Query("DELETE FROM shows WHERE id = :id")
+    suspend fun deleteShowById(id: Int)
 
     @Delete
     suspend fun deleteShow(show: ShowEntity): Int
