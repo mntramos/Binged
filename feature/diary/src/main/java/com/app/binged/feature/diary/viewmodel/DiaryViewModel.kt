@@ -16,7 +16,7 @@ class DiaryViewModel @Inject constructor(
     getAllEpisodesUseCase: GetAllEpisodesUseCase
 ) : ViewModel() {
     val episodes: StateFlow<List<Episode>> = getAllEpisodesUseCase()
-        .map { it.sortedByDescending { it.watchedDate } }
+        .map { it.sortedWith(compareByDescending<Episode> { it.watchedDate }.thenByDescending { it.id }) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
