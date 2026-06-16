@@ -9,7 +9,7 @@ import com.app.binged.data.database.entity.ShowEntity
 
 @Database(
     entities = [ShowEntity::class, EpisodeEntity::class],
-    version = 3,
+    version = 1,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
