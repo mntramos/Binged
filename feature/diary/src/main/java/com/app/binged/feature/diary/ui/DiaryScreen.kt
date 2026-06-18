@@ -16,11 +16,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.binged.feature.diary.viewmodel.DiaryViewModel
 import java.time.ZoneId
@@ -33,6 +37,15 @@ fun DiaryScreen(
     viewModel: DiaryViewModel = hiltViewModel()
 ) {
     val episodes by viewModel.episodes.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val pullRefreshState = rememberPullToRefreshState()
+
+    if (pullRefreshState.isRefreshing) {
+        LaunchedEffect(true) {
+            viewModel.refresh()
+            pullRefreshState.endRefresh()
+        }
+    }
 
     val groupedEntries = episodes.groupBy { episode ->
         val date = episode.watchedDate.toInstant()
@@ -58,40 +71,54 @@ fun DiaryScreen(
     ) { paddingValues ->
         if (groupedEntries.isEmpty()) {
             Box(
-                contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
+                    .nestedScroll(pullRefreshState.nestedScrollConnection),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "Start watching!",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                PullToRefreshContainer(
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    state = pullRefreshState
+                )
             }
         } else {
-            LazyColumn(
-                state = rememberLazyListState(),
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(
                         top = paddingValues.calculateTopPadding(),
                         bottom = paddingValues.calculateBottomPadding()
                     )
+                    .nestedScroll(pullRefreshState.nestedScrollConnection)
             ) {
-                groupedEntries.forEach { (year, month), entries ->
-                    stickyHeader {
-                        MonthHeader(year, month)
-                    }
-                    items(entries, key = { it.id }) { episode ->
-                        DiaryItem(
-                            episode = episode,
-                            onClick = { showId, season, episodeNumber, showName ->
-                                onEpisodeClick(showId, season, episodeNumber, showName)
-                            }
-                        )
+                LazyColumn(
+                    state = rememberLazyListState(),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    groupedEntries.forEach { (year, month), entries ->
+                        stickyHeader {
+                            MonthHeader(year, month)
+                        }
+                        items(entries, key = { it.id }) { episode ->
+                            DiaryItem(
+                                episode = episode,
+                                onClick = { showId, season, episodeNumber, showName ->
+                                    onEpisodeClick(showId, season, episodeNumber, showName)
+                                }
+                            )
+                        }
                     }
                 }
+                PullToRefreshContainer(
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    state = pullRefreshState
+                )
             }
         }
     }

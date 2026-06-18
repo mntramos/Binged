@@ -46,6 +46,9 @@ class SearchViewModel @Inject constructor(
     private val _searchError = MutableStateFlow<String?>(null)
     val searchError: StateFlow<String?> = _searchError
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing
+
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
@@ -63,6 +66,14 @@ class SearchViewModel @Inject constructor(
 
     init {
         loadPopularShows()
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            _popularShows.value = getPopularShowsUseCase()
+            _isRefreshing.value = false
+        }
     }
 
     private fun loadPopularShows() {
