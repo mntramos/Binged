@@ -42,10 +42,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
-import java.io.File
 
 @Composable
 fun SettingsScreen(
@@ -67,30 +65,29 @@ fun SettingsScreen(
         uri?.let { viewModel.importData(it) }
     }
 
+    var pendingExportJson by remember { mutableStateOf<String?>(null) }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let { selectedUri ->
+            try {
+                context.contentResolver.openOutputStream(selectedUri)?.use { out ->
+                    out.write(pendingExportJson?.toByteArray() ?: return@use)
+                }
+            } catch (e: Exception) {
+                scope.launch { snackbarHostState.showSnackbar("Export failed: ${e.message}") }
+            }
+        }
+        pendingExportJson = null
+    }
+
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is SettingsEvent.ShareJson -> {
-                    try {
-                        val cacheDir = File(context.cacheDir, "exports")
-                        cacheDir.mkdirs()
-                        val file = File(cacheDir, event.filename)
-                        file.writeText(event.json)
-
-                        val uri = FileProvider.getUriForFile(
-                            context,
-                            "${context.packageName}.fileprovider",
-                            file
-                        )
-                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "application/json"
-                            putExtra(Intent.EXTRA_STREAM, uri)
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                        context.startActivity(Intent.createChooser(shareIntent, "Export Diary"))
-                    } catch (e: Exception) {
-                        snackbarHostState.showSnackbar("Export failed: ${e.message}")
-                    }
+                    pendingExportJson = event.json
+                    exportLauncher.launch(event.filename)
                 }
                 is SettingsEvent.ShowError -> {
                     snackbarHostState.showSnackbar(event.message)
