@@ -66,12 +66,12 @@ fun ShowsScreen(
     val showSearch by viewModel.showSearch.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val gridColumns by viewModel.gridColumns.collectAsState()
+    val showFavorites by viewModel.showFavorites.collectAsState()
+    val showWatching by viewModel.showWatching.collectAsState()
+    val showAllShows by viewModel.showAllShows.collectAsState()
     val displayShows = if (showSearch) filteredShows else shows
     val watching = displayShows.filter { it.isWatching }
     val favorites = displayShows.filter { it.isFavorite }
-    var showFavorites by remember { mutableStateOf(true) }
-    var showWatching by remember { mutableStateOf(true) }
-    var showAllShows by remember { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
@@ -199,7 +199,7 @@ fun ShowsScreen(
                 ) {
                     if (favorites.isNotEmpty()) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            SectionHeader("Favorites", showFavorites, favorites.size) { showFavorites = !showFavorites }
+                            SectionHeader("Favorites", showFavorites, favorites.size) { viewModel.toggleShowFavorites() }
                         }
                         if (showFavorites) {
                             items(favorites) { show ->
@@ -210,7 +210,7 @@ fun ShowsScreen(
 
                     if (watching.isNotEmpty()) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            SectionHeader("Currently Watching", showWatching, watching.size) { showWatching = !showWatching }
+                            SectionHeader("Currently Watching", showWatching, watching.size) { viewModel.toggleShowWatching() }
                         }
                         if (showWatching) {
                             items(watching) { show ->
@@ -220,7 +220,7 @@ fun ShowsScreen(
                     }
 
                     item(span = { GridItemSpan(maxLineSpan) }) {
-                        SectionHeader("All Shows", showAllShows, displayShows.size) { showAllShows = !showAllShows }
+                        SectionHeader("All Shows", showAllShows, displayShows.size) { viewModel.toggleShowAllShows() }
                     }
                     if (showAllShows) {
                         items(displayShows) { show ->
@@ -239,7 +239,7 @@ fun ShowsScreen(
                 ) {
                     if (favorites.isNotEmpty()) {
                         item {
-                            SectionHeader("Favorites", showFavorites, favorites.size) { showFavorites = !showFavorites }
+                            SectionHeader("Favorites", showFavorites, favorites.size) { viewModel.toggleShowFavorites() }
                         }
                         if (showFavorites) {
                             items(favorites) { show ->
@@ -250,7 +250,7 @@ fun ShowsScreen(
 
                     if (watching.isNotEmpty()) {
                         item {
-                            SectionHeader("Currently Watching", showWatching, watching.size) { showWatching = !showWatching }
+                            SectionHeader("Currently Watching", showWatching, watching.size) { viewModel.toggleShowWatching() }
                         }
                         if (showWatching) {
                             items(watching) { show ->
@@ -260,7 +260,7 @@ fun ShowsScreen(
                     }
 
                     item {
-                        SectionHeader("All Shows", showAllShows, displayShows.size) { showAllShows = !showAllShows }
+                        SectionHeader("All Shows", showAllShows, displayShows.size) { viewModel.toggleShowAllShows() }
                     }
                     if (showAllShows) {
                         items(displayShows) { show ->

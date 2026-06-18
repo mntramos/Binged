@@ -51,6 +51,15 @@ class ShowsViewModel @Inject constructor(
     private val _gridColumns = MutableStateFlow(prefs.getInt("grid_columns", 3))
     val gridColumns: StateFlow<Int> = _gridColumns.asStateFlow()
 
+    private val _showFavorites = MutableStateFlow(prefs.getBoolean("show_favorites", true))
+    val showFavorites: StateFlow<Boolean> = _showFavorites.asStateFlow()
+
+    private val _showWatching = MutableStateFlow(prefs.getBoolean("show_watching", true))
+    val showWatching: StateFlow<Boolean> = _showWatching.asStateFlow()
+
+    private val _showAllShows = MutableStateFlow(prefs.getBoolean("show_all_shows", true))
+    val showAllShows: StateFlow<Boolean> = _showAllShows.asStateFlow()
+
     fun toggleView() {
         val newValue = !_isGridView.value
         _isGridView.value = newValue
@@ -72,5 +81,23 @@ class ShowsViewModel @Inject constructor(
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
+    }
+
+    fun toggleShowFavorites() {
+        val newValue = !_showFavorites.value
+        _showFavorites.value = newValue
+        prefs.edit().putBoolean("show_favorites", newValue).apply()
+    }
+
+    fun toggleShowWatching() {
+        val newValue = !_showWatching.value
+        _showWatching.value = newValue
+        prefs.edit().putBoolean("show_watching", newValue).apply()
+    }
+
+    fun toggleShowAllShows() {
+        val newValue = !_showAllShows.value
+        _showAllShows.value = newValue
+        prefs.edit().putBoolean("show_all_shows", newValue).apply()
     }
 }
