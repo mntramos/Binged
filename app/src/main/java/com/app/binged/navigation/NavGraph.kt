@@ -17,6 +17,7 @@ import com.app.binged.feature.auth.ui.AuthViewModel
 import com.app.binged.feature.auth.ui.LoginScreen
 import com.app.binged.feature.auth.ui.RegisterScreen
 import com.app.binged.feature.diary.ui.DiaryScreen
+import com.app.binged.feature.statistics.StatisticsScreen
 import com.app.binged.feature.search.ui.SearchScreen
 import com.app.binged.feature.settings.ui.SettingsScreen
 import com.app.binged.feature.shows.ui.EpisodeDetailScreen
@@ -83,6 +84,9 @@ fun MainAppNav(
                 },
                 onSettingsClick = {
                     navController.navigate(Route.Settings.path)
+                },
+                onStatisticsClick = {
+                    navController.navigate(Route.Statistics.path)
                 }
             )
         }
@@ -179,6 +183,12 @@ fun MainAppNav(
 
         composable(Route.Settings.path) {
             SettingsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Route.Statistics.path) {
+            StatisticsScreen(
                 onBack = { navController.popBackStack() }
             )
         }
