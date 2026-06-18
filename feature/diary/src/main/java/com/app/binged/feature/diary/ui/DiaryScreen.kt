@@ -14,15 +14,22 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.app.binged.core.utils.UiEvent
 import com.app.binged.feature.diary.viewmodel.DiaryViewModel
+import kotlinx.coroutines.launch
 import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -33,6 +40,24 @@ fun DiaryScreen(
     viewModel: DiaryViewModel = hiltViewModel()
 ) {
     val episodes by viewModel.episodes.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect("snackbar") {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowSnackbar -> launch { snackbarHostState.showSnackbar(event.message) }
+                is UiEvent.ShowSnackbarWithAction -> launch {
+                    val result = snackbarHostState.showSnackbar(
+                        message = event.message,
+                        actionLabel = event.actionLabel
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        viewModel.undoLastAction()
+                    }
+                }
+            }
+        }
+    }
 
     val groupedEntries = episodes.groupBy { episode ->
         val date = episode.watchedDate.toInstant()
@@ -42,6 +67,7 @@ fun DiaryScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Your Diary") },
@@ -88,7 +114,8 @@ fun DiaryScreen(
                             episode = episode,
                             onClick = { showId, season, episodeNumber, showName ->
                                 onEpisodeClick(showId, season, episodeNumber, showName)
-                            }
+                            },
+                            onDelete = { viewModel.deleteEpisode(it) }
                         )
                     }
                 }
