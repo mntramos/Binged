@@ -311,16 +311,6 @@ fun SettingsScreen(
     }
 }
 
-@Composable
-private fun SectionHeader(title: String, color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primary) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium,
-        color = color,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-    )
-}
-
 private fun getAppVersion(context: android.content.Context): String {
     return try {
         val info = context.packageManager.getPackageInfo(context.packageName, 0)

@@ -31,8 +31,8 @@ class SearchViewModel @Inject constructor(
     getTrackedShowsUseCase: GetTrackedShowsUseCase
 ) : ViewModel() {
 
-    private val _searchResults = MutableStateFlow<Result<List<Show>>>(Result.Success(emptyList()))
-    val searchResults: StateFlow<Result<List<Show>>> = _searchResults
+    private val _searchResults = MutableStateFlow<List<Show>>(emptyList())
+    val searchResults: StateFlow<List<Show>> = _searchResults
 
     private val _popularShows = MutableStateFlow<Result<List<Show>>>(Result.Loading)
     val popularShows: StateFlow<Result<List<Show>>> = _popularShows
@@ -40,8 +40,18 @@ class SearchViewModel @Inject constructor(
     private val _searchInProgress = MutableStateFlow(false)
     val searchInProgress: StateFlow<Boolean> = _searchInProgress
 
+    private val _isLoadingMore = MutableStateFlow(false)
+    val isLoadingMore: StateFlow<Boolean> = _isLoadingMore
+
+    private val _searchError = MutableStateFlow<String?>(null)
+    val searchError: StateFlow<String?> = _searchError
+
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
+
+    private var currentPage = 1
+    private var totalPages = 1
+    private var currentQuery = ""
 
     val trackedShowIds: StateFlow<Set<Int>> = getTrackedShowsUseCase()
         .map { shows -> shows.map { it.id }.toSet() }
@@ -63,15 +73,52 @@ class SearchViewModel @Inject constructor(
 
     fun search(query: String) {
         if (query.isBlank()) return
+        currentQuery = query
+        currentPage = 1
+        totalPages = 1
+        _searchResults.value = emptyList()
+        _searchError.value = null
         viewModelScope.launch {
             _searchInProgress.value = true
-            _searchResults.value = searchShowsUseCase(query)
+            when (val result = searchShowsUseCase(query, page = 1)) {
+                is Result.Success -> {
+                    _searchResults.value = result.data.items
+                    currentPage = result.data.currentPage
+                    totalPages = result.data.totalPages
+                }
+                is Result.Error -> {
+                    _searchError.value = result.exception.message ?: "Search failed"
+                }
+                else -> {}
+            }
             _searchInProgress.value = false
         }
     }
 
+    fun loadNextPage() {
+        if (currentPage >= totalPages || _isLoadingMore.value || _searchInProgress.value) return
+        viewModelScope.launch {
+            _isLoadingMore.value = true
+            when (val result = searchShowsUseCase(currentQuery, page = currentPage + 1)) {
+                is Result.Success -> {
+                    _searchResults.value = _searchResults.value + result.data.items
+                    currentPage = result.data.currentPage
+                    totalPages = result.data.totalPages
+                }
+                is Result.Error -> {
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Failed to load more results"))
+                }
+                else -> {}
+            }
+            _isLoadingMore.value = false
+        }
+    }
+
     fun clearSearchResults() {
-        _searchResults.value = Result.Success(emptyList())
+        _searchResults.value = emptyList()
+        _searchError.value = null
+        currentPage = 1
+        totalPages = 1
     }
 
     fun trackShow(show: Show) {

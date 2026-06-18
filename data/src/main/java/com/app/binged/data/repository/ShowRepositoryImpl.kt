@@ -8,6 +8,7 @@ import com.app.binged.data.mapper.toDomain
 import com.app.binged.data.mapper.toEntity
 import com.app.binged.data.sync.SyncManager
 import com.app.binged.domain.contract.ShowRepository
+import com.app.binged.domain.model.PaginatedResult
 import com.app.binged.domain.model.Show
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -28,10 +29,16 @@ class ShowRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun searchShows(query: String): Result<List<Show>> {
+    override suspend fun searchShows(query: String, page: Int): Result<PaginatedResult<Show>> {
         return try {
-            val response = tmdbService.searchShows(query)
-            Result.Success(response.results.map { it.toDomain() })
+            val response = tmdbService.searchShows(query, page)
+            Result.Success(
+                PaginatedResult(
+                    items = response.results.map { it.toDomain() },
+                    currentPage = response.page,
+                    totalPages = response.totalPages
+                )
+            )
         } catch (e: Exception) {
             Result.Error(e)
         }

@@ -23,7 +23,8 @@ interface TmdbService {
 
     @GET("search/tv")
     suspend fun searchShows(
-        @Query("query") query: String
+        @Query("query") query: String,
+        @Query("page") page: Int = 1
     ): TmdbSearchResponse
 
     @GET("tv/popular")

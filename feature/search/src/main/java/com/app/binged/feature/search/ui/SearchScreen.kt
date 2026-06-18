@@ -5,10 +5,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -48,7 +50,11 @@ fun SearchScreen(
     val popularShows by viewModel.popularShows.collectAsState()
     val trackedShowIds by viewModel.trackedShowIds.collectAsState()
     val searchInProgress by viewModel.searchInProgress.collectAsState()
-    val listState = rememberLazyListState()
+    val isLoadingMore by viewModel.isLoadingMore.collectAsState()
+    val searchError by viewModel.searchError.collectAsState()
+    val popularListState = rememberLazyListState()
+    val searchListState = rememberLazyListState()
+    val listState = if (searchQuery.isBlank()) popularListState else searchListState
     val focusRequester = remember { FocusRequester() }
     val snackbarHostState = remember { SnackbarHostState() }
     var showToUntrack by remember { mutableStateOf<Show?>(null) }
@@ -57,6 +63,19 @@ fun SearchScreen(
         if (searchQuery.isNotBlank()) {
             delay(500)
             viewModel.search(searchQuery)
+        }
+    }
+
+    LaunchedEffect(listState) {
+        snapshotFlow {
+            val layoutInfo = listState.layoutInfo
+            val totalItems = layoutInfo.totalItemsCount
+            val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            lastVisibleItem >= totalItems - 3
+        }.collect { isNearEnd ->
+            if (isNearEnd && searchQuery.isNotBlank()) {
+                viewModel.loadNextPage()
+            }
         }
     }
 
@@ -167,36 +186,46 @@ fun SearchScreen(
                     }
                 }
 
-                searchResults is Result.Error -> {
+                searchError != null -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("Error searching for shows")
                     }
                 }
 
-                searchResults is Result.Success -> {
-                    val shows = (searchResults as Result.Success<List<Show>>).data
-
-                    if (shows.isEmpty()) {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("No shows found matching '$searchQuery'")
+                searchResults.isNotEmpty() -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        state = listState,
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(searchResults) { show ->
+                            SearchResultItem(
+                                show = show,
+                                isAlreadyTracked = show.id in trackedShowIds,
+                                onClick = { onShowClick(show.id) },
+                                onTrackClick = { viewModel.trackShow(show) },
+                                onUntrackClick = { showToUntrack = show }
+                            )
                         }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            state = listState,
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(shows) { show ->
-                                SearchResultItem(
-                                    show = show,
-                                    isAlreadyTracked = show.id in trackedShowIds,
-                                    onClick = { onShowClick(show.id) },
-                                    onTrackClick = { viewModel.trackShow(show) },
-                                    onUntrackClick = { showToUntrack = show }
-                                )
+                        if (isLoadingMore) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
                             }
                         }
+                    }
+                }
+
+                else -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No shows found matching '$searchQuery'")
                     }
                 }
             }
