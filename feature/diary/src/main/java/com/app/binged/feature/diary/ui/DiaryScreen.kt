@@ -88,7 +88,8 @@ fun DiaryScreen(
                             episode = episode,
                             onClick = { showId, season, episodeNumber, showName ->
                                 onEpisodeClick(showId, season, episodeNumber, showName)
-                            }
+                            },
+                            onDelete = { viewModel.deleteEpisode(it) }
                         )
                     }
                 }

@@ -3,16 +3,19 @@ package com.app.binged.feature.diary.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.binged.domain.model.Episode
+import com.app.binged.domain.usecase.DeleteEpisodeUseCase
 import com.app.binged.domain.usecase.GetAllEpisodesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class DiaryViewModel @Inject constructor(
+    private val deleteEpisodeUseCase: DeleteEpisodeUseCase,
     getAllEpisodesUseCase: GetAllEpisodesUseCase
 ) : ViewModel() {
     val episodes: StateFlow<List<Episode>> = getAllEpisodesUseCase()
@@ -22,4 +25,10 @@ class DiaryViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    fun deleteEpisode(episode: Episode) {
+        viewModelScope.launch {
+            deleteEpisodeUseCase(episode)
+        }
+    }
 }
