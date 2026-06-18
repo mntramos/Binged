@@ -48,7 +48,9 @@ fun Show.toEntity(): ShowEntity {
         firstAirDate = firstAirDate,
         rating = rating,
         tagline = tagline,
-        seasonCount = seasonCount
+        seasonCount = seasonCount,
+        isFavorite = isFavorite,
+        isWatching = isWatching
     )
 }
 
