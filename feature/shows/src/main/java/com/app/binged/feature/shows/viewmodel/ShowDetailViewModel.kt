@@ -6,7 +6,6 @@ import com.app.binged.core.utils.Result
 import com.app.binged.core.utils.UiEvent
 import com.app.binged.domain.model.Episode
 import com.app.binged.domain.model.Show
-import com.app.binged.domain.usecase.DeleteEpisodeUseCase
 import com.app.binged.domain.usecase.GetEpisodesForShowUseCase
 import com.app.binged.domain.usecase.GetShowDetailsUseCase
 import com.app.binged.domain.usecase.GetTrackedShowsUseCase
@@ -30,7 +29,6 @@ class ShowDetailViewModel @Inject constructor(
     private val getEpisodesForShowUseCase: GetEpisodesForShowUseCase,
     private val trackShowUseCase: TrackShowUseCase,
     private val untrackShowUseCase: UntrackShowUseCase,
-    private val deleteEpisodeUseCase: DeleteEpisodeUseCase,
     private val updateFavoriteStatusUseCase: UpdateFavoriteStatusUseCase,
     private val updateWatchingStatusUseCase: UpdateWatchingStatusUseCase,
     getTrackedShowsUseCase: GetTrackedShowsUseCase
@@ -151,9 +149,4 @@ class ShowDetailViewModel @Inject constructor(
         }
     }
 
-    fun deleteEpisode(episode: Episode) {
-        viewModelScope.launch {
-            deleteEpisodeUseCase(episode)
-        }
-    }
 }

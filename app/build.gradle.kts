@@ -110,4 +110,5 @@ dependencies {
     implementation(project(":feature:tracking"))
     implementation(project(":feature:auth"))
     implementation(project(":feature:settings"))
+    implementation(project(":feature:statistics"))
 }
