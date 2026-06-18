@@ -12,15 +12,12 @@ import kotlinx.coroutines.flow.stateIn
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
-import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 data class UserStats(
     val totalEpisodes: Int = 0,
     val totalShows: Int = 0,
     val totalHours: Long = 0,
-    val currentStreak: Int = 0,
-    val longestStreak: Int = 0,
     val episodesThisWeek: Int = 0,
     val episodesThisMonth: Int = 0
 )
@@ -55,55 +52,10 @@ class StatisticsViewModel @Inject constructor(
             daysBetween in 0..29
         }
 
-        val sortedDates = episodes
-            .map { it.watchedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() }
-            .distinct()
-            .sortedDescending()
-
-        var currentStreak = 0
-        val today = Instant.now().atZone(ZoneId.systemDefault()).toLocalDate()
-
-        if (sortedDates.isNotEmpty()) {
-            val firstDate = sortedDates.first()
-            val daysSinceLastWatched = ChronoUnit.DAYS.between(firstDate, today)
-            if (daysSinceLastWatched <= 1) {
-                currentStreak = 1
-                for (i in 1 until sortedDates.size) {
-                    val prev = sortedDates[i - 1]
-                    val curr = sortedDates[i]
-                    val diff = ChronoUnit.DAYS.between(curr, prev)
-                    if (diff == 1L) {
-                        currentStreak++
-                    } else {
-                        break
-                    }
-                }
-            }
-        }
-
-        var longestStreak = 0
-        if (sortedDates.isNotEmpty()) {
-            var streak = 1
-            for (i in 1 until sortedDates.size) {
-                val prev = sortedDates[i - 1]
-                val curr = sortedDates[i]
-                val diff = ChronoUnit.DAYS.between(curr, prev)
-                if (diff == 1L) {
-                    streak++
-                } else {
-                    longestStreak = maxOf(longestStreak, streak)
-                    streak = 1
-                }
-            }
-            longestStreak = maxOf(longestStreak, streak)
-        }
-
         return UserStats(
             totalEpisodes = totalEpisodes,
             totalShows = totalShows,
             totalHours = totalHours,
-            currentStreak = currentStreak,
-            longestStreak = longestStreak,
             episodesThisWeek = episodesThisWeek,
             episodesThisMonth = episodesThisMonth
         )

@@ -397,7 +397,7 @@ fun ShowDetailScreen(
                             onClick = { onLogEpisodeClick(showId, showName) },
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .padding(16.dp).navigationBarsPadding()
+                                .padding(bottom = 16.dp).navigationBarsPadding()
                                 .navigationBarsPadding()
                         ) {
                             Icon(
@@ -413,7 +413,7 @@ fun ShowDetailScreen(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(16.dp).navigationBarsPadding()
+                .padding(bottom = 16.dp).navigationBarsPadding()
         )
     }
 }

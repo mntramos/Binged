@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.OndemandVideo
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
@@ -79,16 +78,6 @@ fun StatisticsScreen(
                 icon = Icons.Filled.Schedule,
                 label = "Hours Watched",
                 value = "${stats.totalHours}h"
-            )
-            StatCard(
-                icon = Icons.Filled.LocalFireDepartment,
-                label = "Current Streak",
-                value = "${stats.currentStreak} days"
-            )
-            StatCard(
-                icon = Icons.Filled.LocalFireDepartment,
-                label = "Longest Streak",
-                value = "${stats.longestStreak} days"
             )
             StatCard(
                 icon = Icons.Filled.DateRange,
