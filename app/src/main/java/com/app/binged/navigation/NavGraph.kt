@@ -3,9 +3,21 @@ package com.app.binged.navigation
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import android.content.Context
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -13,6 +25,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.app.binged.core.utils.NetworkMonitor
 import com.app.binged.feature.auth.ui.AuthViewModel
 import com.app.binged.feature.auth.ui.LoginScreen
 import com.app.binged.feature.auth.ui.RegisterScreen
@@ -62,14 +75,19 @@ fun AuthNav(
 fun MainAppNav(
     navController: NavHostController = rememberNavController()
 ) {
-    NavHost(
-        navController = navController,
-        startDestination = Route.ShowList.path,
-        enterTransition = { slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(300)) },
-        exitTransition = { slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(300)) },
-        popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(300)) },
-        popExitTransition = { slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(300)) }
-    ) {
+    val context = LocalContext.current
+    val networkMonitor = remember { NetworkMonitor(context) }
+    val isOnline by networkMonitor.isOnline.collectAsState(initial = true)
+
+    Box(modifier = Modifier) {
+        NavHost(
+            navController = navController,
+            startDestination = Route.ShowList.path,
+            enterTransition = { slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(300)) },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(300)) },
+            popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(300)) },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(300)) }
+        ) {
         composable(Route.ShowList.path) {
             ShowsScreen(
                 onShowClick = { showId ->
@@ -183,4 +201,22 @@ fun MainAppNav(
             )
         }
     }
+
+    if (!isOnline) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.errorContainer)
+                .padding(horizontal = 16.dp, vertical = 6.dp)
+                .align(Alignment.TopCenter),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "You are offline",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+        }
+    }
+}
 }

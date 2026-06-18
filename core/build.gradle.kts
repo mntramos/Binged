@@ -33,6 +33,9 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation(libs.hilt.android)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

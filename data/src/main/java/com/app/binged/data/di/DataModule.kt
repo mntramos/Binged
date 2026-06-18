@@ -3,6 +3,7 @@ package com.app.binged.data.di
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import androidx.room.Room
+import com.app.binged.core.utils.NetworkMonitor
 import com.app.binged.data.BuildConfig
 import com.app.binged.data.api.TmdbService
 import com.app.binged.data.database.AppDatabase
@@ -87,6 +88,12 @@ object DataModule {
     @Singleton
     fun provideTmdbService(retrofit: Retrofit): TmdbService {
         return retrofit.create(TmdbService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNetworkMonitor(@ApplicationContext context: Context): NetworkMonitor {
+        return NetworkMonitor(context)
     }
 }
 
