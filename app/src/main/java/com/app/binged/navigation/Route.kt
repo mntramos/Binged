@@ -1,5 +1,7 @@
 package com.app.binged.navigation
 
+import android.net.Uri
+
 sealed class Route(val path: String) {
 
     data object ShowList : Route("show_list")
@@ -19,7 +21,7 @@ sealed class Route(val path: String) {
 
     data object EpisodeDetail : Route("episode_detail/{showId}/{season}/{episode}?showName={showName}") {
         fun createRoute(showId: Int, season: Int, episode: Int, showName: String = "") =
-            "episode_detail/$showId/$season/$episode?showName=$showName"
+            "episode_detail/$showId/$season/$episode?showName=${Uri.encode(showName)}"
     }
 
     data object Settings : Route("settings")
