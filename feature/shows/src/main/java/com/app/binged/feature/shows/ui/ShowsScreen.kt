@@ -127,7 +127,8 @@ fun ShowsScreen(
                 .fillMaxSize()
                 .padding(top = paddingValues.calculateTopPadding())
         ) {
-            if (isGridView && displayShows.isNotEmpty()) {
+            // was: if (isGridView && displayShows.isNotEmpty())
+            if (false) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
