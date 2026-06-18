@@ -191,9 +191,8 @@ fun ShowsScreen(
                     columns = GridCells.Fixed(gridColumns),
                     modifier = Modifier
                         .fillMaxSize()
-                        .weight(1f)
-                        .padding(bottom = paddingValues.calculateBottomPadding() + 80.dp),
-                    contentPadding = PaddingValues(8.dp),
+                        .weight(1f),
+                    contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 120.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -232,9 +231,8 @@ fun ShowsScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .weight(1f)
-                        .padding(bottom = paddingValues.calculateBottomPadding() + 80.dp),
-                    contentPadding = PaddingValues(8.dp),
+                        .weight(1f),
+                    contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 120.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (favorites.isNotEmpty()) {
