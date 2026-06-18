@@ -2,6 +2,7 @@ package com.app.binged.feature.settings.ui
 
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -217,18 +219,6 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            OutlinedButton(
-                onClick = { showDeleteDialog = true },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = uiState !is SettingsUiState.Loading
-            ) {
-                Icon(Icons.Default.Delete, contentDescription = null)
-                Spacer(modifier = Modifier.padding(horizontal = 4.dp))
-                Text("Delete Account", color = MaterialTheme.colorScheme.error)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
             HorizontalDivider()
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -266,11 +256,55 @@ fun SettingsScreen(
             SectionHeader("About")
 
             Text(
-                text = "Binged v${getAppVersion(context)}",
+                text = "Version: ${getAppVersion(context)}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )
+
+            Text(
+                text = "Package: ${context.packageName}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+
+            OutlinedButton(
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/mntramos/Binged"))
+                    context.startActivity(intent)
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Info, contentDescription = null)
+                Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                Text("View on GitHub")
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            HorizontalDivider()
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            SectionHeader("Danger Zone", color = MaterialTheme.colorScheme.error)
+
+            Text(
+                text = "Delete all data permanently. This action cannot be undone.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+
+            OutlinedButton(
+                onClick = { showDeleteDialog = true },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = uiState !is SettingsUiState.Loading
+            ) {
+                Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                Text("Delete Account", color = MaterialTheme.colorScheme.error)
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
         }
@@ -278,11 +312,11 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SectionHeader(title: String) {
+private fun SectionHeader(title: String, color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primary) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.primary,
+        color = color,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
     )
 }
