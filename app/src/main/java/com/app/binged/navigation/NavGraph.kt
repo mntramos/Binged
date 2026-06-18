@@ -103,8 +103,8 @@ fun MainAppNav(
                     navController.currentBackStackEntry?.savedStateHandle?.set("showName", name)
                     navController.navigate(Route.LogEpisode.createRoute(id))
                 },
-                onEpisodeClick = { showId, season, episode ->
-                    navController.navigate(Route.EpisodeDetail.createRoute(showId, season, episode))
+                onEpisodeClick = { showId, season, episode, showName ->
+                    navController.navigate(Route.EpisodeDetail.createRoute(showId, season, episode, showName))
                 },
                 onBack = {
                     if (fromSearch) {
@@ -150,8 +150,8 @@ fun MainAppNav(
 
         composable(Route.Diary.path) {
             DiaryScreen(
-                onEpisodeClick = { showId, season, episode ->
-                    navController.navigate(Route.EpisodeDetail.createRoute(showId, season, episode))
+                onEpisodeClick = { showId, season, episode, showName ->
+                    navController.navigate(Route.EpisodeDetail.createRoute(showId, season, episode, showName))
                 },
                 onBack = { navController.popBackStack() }
             )
@@ -167,7 +167,13 @@ fun MainAppNav(
             )
         ) {
             EpisodeDetailScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onShowClick = { showId ->
+                    navController.navigate(Route.ShowDetail.createRoute(showId)) {
+                        popUpTo(Route.EpisodeDetail.path) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 

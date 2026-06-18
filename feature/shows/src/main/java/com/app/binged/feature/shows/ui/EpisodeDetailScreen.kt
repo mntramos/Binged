@@ -1,5 +1,6 @@
 package com.app.binged.feature.shows.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -55,6 +56,7 @@ import java.util.Locale
 @Composable
 fun EpisodeDetailScreen(
     onBack: () -> Unit,
+    onShowClick: (Int) -> Unit = {},
     viewModel: EpisodeDetailViewModel = hiltViewModel()
 ) {
     val episodeState by viewModel.episodeDetail.collectAsState()
@@ -158,7 +160,10 @@ fun EpisodeDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Episode Details") },
+                title = {
+                    val title = if (episodeState is Result.Success) (episodeState as Result.Success).data.title else "Episode Details"
+                    Text(text = title, maxLines = Int.MAX_VALUE)
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -267,24 +272,19 @@ fun EpisodeDetailScreen(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = episode.title,
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
                             text = episode.getIdentifier(),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
 
+                        Spacer(modifier = Modifier.height(4.dp))
+
                         if (episode.showName.isNotEmpty()) {
                             Text(
                                 text = episode.showName,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.clickable { onShowClick(episode.showId) }
                             )
                         }
 

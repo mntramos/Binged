@@ -28,7 +28,7 @@ import java.time.ZoneId
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DiaryScreen(
-    onEpisodeClick: (showId: Int, season: Int, episode: Int) -> Unit,
+    onEpisodeClick: (showId: Int, season: Int, episode: Int, showName: String) -> Unit,
     onBack: () -> Unit,
     viewModel: DiaryViewModel = hiltViewModel()
 ) {
@@ -86,8 +86,8 @@ fun DiaryScreen(
                     items(entries, key = { it.id }) { episode ->
                         DiaryItem(
                             episode = episode,
-                            onClick = { showId, season, episodeNumber ->
-                                onEpisodeClick(showId, season, episodeNumber)
+                            onClick = { showId, season, episodeNumber, showName ->
+                                onEpisodeClick(showId, season, episodeNumber, showName)
                             }
                         )
                     }

@@ -191,7 +191,7 @@ fun ShowsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .weight(1f)
-                        .padding(bottom = paddingValues.calculateBottomPadding()),
+                        .padding(bottom = paddingValues.calculateBottomPadding() + 80.dp),
                     contentPadding = PaddingValues(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -232,7 +232,7 @@ fun ShowsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .weight(1f)
-                        .padding(bottom = paddingValues.calculateBottomPadding()),
+                        .padding(bottom = paddingValues.calculateBottomPadding() + 80.dp),
                     contentPadding = PaddingValues(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {

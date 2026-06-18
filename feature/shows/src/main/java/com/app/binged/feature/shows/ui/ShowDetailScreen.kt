@@ -71,7 +71,7 @@ import java.util.Locale
 fun ShowDetailScreen(
     showId: Int,
     onLogEpisodeClick: (Int, String) -> Unit,
-    onEpisodeClick: (Int, Int, Int) -> Unit,
+    onEpisodeClick: (Int, Int, Int, String) -> Unit,
     onBack: () -> Unit,
     viewModel: ShowDetailViewModel = hiltViewModel()
 ) {
@@ -273,7 +273,7 @@ fun ShowDetailScreen(
                                 seasonEpisodes.distinctBy { it.episodeId }.forEach { episode ->
                                     EpisodeItem(
                                         episode = episode,
-                                        onClick = { onEpisodeClick(showId, episode.seasonNumber, episode.episodeNumber) },
+                                        onClick = { onEpisodeClick(showId, episode.seasonNumber, episode.episodeNumber, episode.showName) },
                                         onLongClick = { viewModel.deleteEpisode(episode) }
                                     )
                                 }

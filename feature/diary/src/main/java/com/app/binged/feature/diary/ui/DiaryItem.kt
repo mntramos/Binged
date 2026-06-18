@@ -29,13 +29,13 @@ import com.app.binged.domain.model.Episode
 @Composable
 fun DiaryItem(
     episode: Episode,
-    onClick: (Int, Int, Int) -> Unit
+    onClick: (Int, Int, Int, String) -> Unit
 ) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = { onClick(episode.showId, episode.seasonNumber, episode.episodeNumber) })
+            .clickable(onClick = { onClick(episode.showId, episode.seasonNumber, episode.episodeNumber, episode.showName) })
     ) {
         AsyncImage(
             model = "https://image.tmdb.org/t/p/w500${episode.stillPath}",
