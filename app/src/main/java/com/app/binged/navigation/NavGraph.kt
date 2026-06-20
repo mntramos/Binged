@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -216,9 +217,10 @@ fun MainAppNav(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .align(Alignment.TopCenter)
+                .statusBarsPadding()
                 .background(MaterialTheme.colorScheme.errorContainer)
-                .padding(horizontal = 16.dp, vertical = 6.dp)
-                .align(Alignment.TopCenter),
+                .padding(horizontal = 16.dp, vertical = 6.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
