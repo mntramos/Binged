@@ -277,7 +277,6 @@ fun ShowDetailScreen(
                                     EpisodeItem(
                                         episode = episode,
                                         onClick = { onEpisodeClick(showId, episode.seasonNumber, episode.episodeNumber, episode.showName) },
-                                        onLongClick = { viewModel.deleteEpisode(episode) }
                                     )
                                 }
                             }
@@ -408,7 +407,7 @@ fun ShowDetailScreen(
                             onClick = { onLogEpisodeClick(showId, showName) },
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .padding(16.dp)
+                                .padding(bottom = 16.dp).navigationBarsPadding()
                                 .navigationBarsPadding()
                         ) {
                             Icon(
@@ -424,7 +423,7 @@ fun ShowDetailScreen(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(16.dp)
+                .padding(bottom = 16.dp).navigationBarsPadding()
         )
     }
 }

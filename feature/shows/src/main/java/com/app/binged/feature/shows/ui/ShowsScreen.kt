@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material3.Button
@@ -67,6 +68,7 @@ fun ShowsScreen(
     onSearchClick: () -> Unit,
     onDiaryClick: () -> Unit,
     onSettingsClick: () -> Unit = {},
+    onStatisticsClick: () -> Unit = {},
     viewModel: ShowsViewModel = hiltViewModel()
 ) {
     val shows by viewModel.shows.collectAsState()
@@ -126,6 +128,11 @@ fun ShowsScreen(
                             text = { Text("Settings") },
                             leadingIcon = { Icon(Icons.Default.Settings, null) },
                             onClick = { showMenu = false; onSettingsClick() }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Statistics") },
+                            leadingIcon = { Icon(Icons.Filled.Star, null) },
+                            onClick = { showMenu = false; onStatisticsClick() }
                         )
                     }
                 }
