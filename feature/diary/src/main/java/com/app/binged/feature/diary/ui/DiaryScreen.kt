@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,6 +24,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -30,7 +32,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -38,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.binged.core.utils.UiEvent
+import com.app.binged.domain.model.Episode
 import com.app.binged.feature.diary.viewmodel.DiaryViewModel
 import kotlinx.coroutines.launch
 import java.time.ZoneId
@@ -53,6 +58,7 @@ fun DiaryScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val pullRefreshState = rememberPullToRefreshState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var pendingDeletion by remember { mutableStateOf<Episode?>(null) }
 
     if (pullRefreshState.isRefreshing) {
         LaunchedEffect(true) {
@@ -160,7 +166,7 @@ fun DiaryScreen(
                                 onClick = { showId, season, episodeNumber, showName ->
                                     onEpisodeClick(showId, season, episodeNumber, showName)
                                 },
-                                onDelete = { viewModel.deleteEpisode(it) }
+                                onDeleteRequest = { pendingDeletion = it }
                             )
                         }
                     }
@@ -171,5 +177,26 @@ fun DiaryScreen(
                 )
             }
         }
+    }
+
+    pendingDeletion?.let { episode ->
+        AlertDialog(
+            onDismissRequest = { pendingDeletion = null },
+            title = { Text("Delete entry?") },
+            text = { Text("Are you sure you want to delete \"${episode.title}\" from your diary?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteEpisode(episode)
+                    pendingDeletion = null
+                }) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDeletion = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
