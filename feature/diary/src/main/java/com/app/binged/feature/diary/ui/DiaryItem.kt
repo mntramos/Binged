@@ -40,12 +40,12 @@ import com.app.binged.domain.model.Episode
 fun DiaryItem(
     episode: Episode,
     onClick: (Int, Int, Int, String) -> Unit,
-    onDelete: (Episode) -> Unit
+    onDeleteRequest: (Episode) -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
             if (value == SwipeToDismissBoxValue.EndToStart) {
-                onDelete(episode)
+                onDeleteRequest(episode)
                 true
             } else {
                 false
