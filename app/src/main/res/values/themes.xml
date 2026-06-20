@@ -2,4 +2,10 @@
 <resources>
 
     <style name="Theme.Binged" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.Binged.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/black</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_app</item>
+        <item name="postSplashScreenTheme">@style/Theme.Binged</item>
+    </style>
 </resources>
