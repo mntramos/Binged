@@ -42,7 +42,10 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +53,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.binged.domain.model.Show
@@ -77,6 +81,15 @@ fun ShowsScreen(
     val displayShows = if (showSearch) filteredShows else shows
     val watching = displayShows.filter { it.isWatching }
     val favorites = displayShows.filter { it.isFavorite }
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val pullRefreshState = rememberPullToRefreshState()
+
+    if (pullRefreshState.isRefreshing) {
+        LaunchedEffect(true) {
+            viewModel.refresh()
+            pullRefreshState.endRefresh()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -215,15 +228,19 @@ fun ShowsScreen(
                     }
                 }
             } else if (isGridView) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(gridColumns),
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .weight(1f),
-                    contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 120.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        .weight(1f)
+                        .nestedScroll(pullRefreshState.nestedScrollConnection)
                 ) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(gridColumns),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 120.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                     if (favorites.isNotEmpty()) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             SectionHeader("Favorites", showFavorites, favorites.size) { viewModel.toggleShowFavorites() }
@@ -255,14 +272,23 @@ fun ShowsScreen(
                         }
                     }
                 }
+                    PullToRefreshContainer(
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        state = pullRefreshState
+                    )
+                }
             } else {
-                LazyColumn(
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .weight(1f),
-                    contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 120.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .weight(1f)
+                        .nestedScroll(pullRefreshState.nestedScrollConnection)
                 ) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 120.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                     if (favorites.isNotEmpty()) {
                         item {
                             SectionHeader("Favorites", showFavorites, favorites.size) { viewModel.toggleShowFavorites() }
@@ -293,6 +319,11 @@ fun ShowsScreen(
                             ShowItem(show) { onShowClick(show.id) }
                         }
                     }
+                    }
+                    PullToRefreshContainer(
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        state = pullRefreshState
+                    )
                 }
             }
         }

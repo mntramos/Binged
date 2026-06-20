@@ -7,6 +7,7 @@ import com.app.binged.domain.model.Show
 import com.app.binged.domain.usecase.GetTrackedShowsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -59,6 +61,17 @@ class ShowsViewModel @Inject constructor(
 
     private val _showAllShows = MutableStateFlow(prefs.getBoolean("show_all_shows", true))
     val showAllShows: StateFlow<Boolean> = _showAllShows.asStateFlow()
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    fun refresh() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            delay(300)
+            _isRefreshing.value = false
+        }
+    }
 
     fun toggleView() {
         val newValue = !_isGridView.value

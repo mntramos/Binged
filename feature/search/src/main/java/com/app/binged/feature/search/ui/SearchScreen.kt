@@ -2,6 +2,7 @@ package com.app.binged.feature.search.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,6 +33,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.binged.core.utils.Result
@@ -39,6 +43,7 @@ import com.app.binged.feature.search.viewmodel.SearchViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
     onShowClick: (Int) -> Unit,
@@ -58,6 +63,15 @@ fun SearchScreen(
     val focusRequester = remember { FocusRequester() }
     val snackbarHostState = remember { SnackbarHostState() }
     var showToUntrack by remember { mutableStateOf<Show?>(null) }
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val pullRefreshState = rememberPullToRefreshState()
+
+    if (pullRefreshState.isRefreshing) {
+        LaunchedEffect(true) {
+            viewModel.refresh()
+            pullRefreshState.endRefresh()
+        }
+    }
 
     LaunchedEffect(searchQuery) {
         if (searchQuery.isNotBlank()) {
@@ -152,28 +166,38 @@ fun SearchScreen(
                                     Text("Enter a show name to search", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             } else {
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxSize(),
-                                    state = listState,
-                                    contentPadding = PaddingValues(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .nestedScroll(pullRefreshState.nestedScrollConnection)
                                 ) {
-                                    item {
-                                        Text(
-                                            text = "Popular Shows",
-                                            style = MaterialTheme.typography.titleLarge,
-                                            modifier = Modifier.padding(bottom = 8.dp)
-                                        )
+                                    LazyColumn(
+                                        modifier = Modifier.fillMaxSize(),
+                                        state = listState,
+                                        contentPadding = PaddingValues(16.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        item {
+                                            Text(
+                                                text = "Popular Shows",
+                                                style = MaterialTheme.typography.titleLarge,
+                                                modifier = Modifier.padding(bottom = 8.dp)
+                                            )
+                                        }
+                                        items(shows) { show ->
+                                            SearchResultItem(
+                                                show = show,
+                                                isAlreadyTracked = show.id in trackedShowIds,
+                                                onClick = { onShowClick(show.id) },
+                                                onTrackClick = { viewModel.trackShow(show) },
+                                                onUntrackClick = { showToUntrack = show }
+                                            )
+                                        }
                                     }
-                                    items(shows) { show ->
-                                        SearchResultItem(
-                                            show = show,
-                                            isAlreadyTracked = show.id in trackedShowIds,
-                                            onClick = { onShowClick(show.id) },
-                                            onTrackClick = { viewModel.trackShow(show) },
-                                            onUntrackClick = { showToUntrack = show }
-                                        )
-                                    }
+                                    PullToRefreshContainer(
+                                        modifier = Modifier.align(Alignment.TopCenter),
+                                        state = pullRefreshState
+                                    )
                                 }
                             }
                         }
@@ -193,36 +217,45 @@ fun SearchScreen(
                 }
 
                 searchResults.isNotEmpty() -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        state = listState,
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .nestedScroll(pullRefreshState.nestedScrollConnection)
                     ) {
-                        items(searchResults) { show ->
-                            SearchResultItem(
-                                show = show,
-                                isAlreadyTracked = show.id in trackedShowIds,
-                                onClick = { onShowClick(show.id) },
-                                onTrackClick = { viewModel.trackShow(show) },
-                                onUntrackClick = { showToUntrack = show }
-                            )
-                        }
-                        if (isLoadingMore) {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator()
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            state = listState,
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(searchResults) { show ->
+                                SearchResultItem(
+                                    show = show,
+                                    isAlreadyTracked = show.id in trackedShowIds,
+                                    onClick = { onShowClick(show.id) },
+                                    onTrackClick = { viewModel.trackShow(show) },
+                                    onUntrackClick = { showToUntrack = show }
+                                )
+                            }
+                            if (isLoadingMore) {
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
                                 }
                             }
                         }
+                        PullToRefreshContainer(
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            state = pullRefreshState
+                        )
                     }
                 }
-
                 else -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("No shows found matching '$searchQuery'")
