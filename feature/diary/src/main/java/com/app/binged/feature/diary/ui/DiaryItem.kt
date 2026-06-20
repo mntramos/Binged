@@ -12,6 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,7 +33,8 @@ import com.app.binged.domain.model.Episode
 @Composable
 fun DiaryItem(
     episode: Episode,
-    onClick: (Int, Int, Int, String) -> Unit
+    onClick: (Int, Int, Int, String) -> Unit,
+    onDelete: (Episode) -> Unit
 ) {
     Box(
         contentAlignment = Alignment.Center,
@@ -88,6 +93,17 @@ fun DiaryItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+
+        IconButton(
+            onClick = { onDelete(episode) },
+            modifier = Modifier.align(Alignment.TopEnd)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Close,
+                contentDescription = "Delete episode",
+                tint = Color.White
+            )
         }
     }
 }

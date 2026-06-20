@@ -101,6 +101,9 @@ fun SearchScreen(
         viewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.ShowSnackbar -> launch { snackbarHostState.showSnackbar(event.message) }
+                is UiEvent.ShowSnackbarWithAction -> {
+                    launch { snackbarHostState.showSnackbar(event.message) }
+                }
             }
         }
     }

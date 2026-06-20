@@ -10,6 +10,7 @@ import com.app.binged.domain.usecase.DeleteEpisodeUseCase
 import com.app.binged.domain.usecase.GetEpisodesForShowUseCase
 import com.app.binged.domain.usecase.GetShowDetailsUseCase
 import com.app.binged.domain.usecase.GetTrackedShowsUseCase
+import com.app.binged.domain.usecase.LogEpisodeUseCase
 import com.app.binged.domain.usecase.TrackShowUseCase
 import com.app.binged.domain.usecase.UntrackShowUseCase
 import com.app.binged.domain.usecase.UpdateFavoriteStatusUseCase
@@ -31,6 +32,7 @@ class ShowDetailViewModel @Inject constructor(
     private val trackShowUseCase: TrackShowUseCase,
     private val untrackShowUseCase: UntrackShowUseCase,
     private val deleteEpisodeUseCase: DeleteEpisodeUseCase,
+    private val logEpisodeUseCase: LogEpisodeUseCase,
     private val updateFavoriteStatusUseCase: UpdateFavoriteStatusUseCase,
     private val updateWatchingStatusUseCase: UpdateWatchingStatusUseCase,
     getTrackedShowsUseCase: GetTrackedShowsUseCase
@@ -63,6 +65,8 @@ class ShowDetailViewModel @Inject constructor(
 
     private var currentShow: Show? = null
     private var currentShowId: Int = 0
+    private var lastDeletedShow: Show? = null
+    private var lastDeletedEpisode: Episode? = null
 
     fun loadShowDetails(showId: Int) {
         if (currentShowId == showId && _showDetails.value !is Result.Loading) return
@@ -116,7 +120,8 @@ class ShowDetailViewModel @Inject constructor(
             val result = untrackShowUseCase(show)
             if (result > 0) {
                 _isTracked.value = false
-                _uiEvent.emit(UiEvent.ShowSnackbar("Removed ${show.name}"))
+                lastDeletedShow = show
+                _uiEvent.emit(UiEvent.ShowSnackbarWithAction("Removed ${show.name}", "Undo"))
             } else {
                 _uiEvent.emit(UiEvent.ShowSnackbar("Failed to remove ${show.name}"))
             }
@@ -153,7 +158,26 @@ class ShowDetailViewModel @Inject constructor(
 
     fun deleteEpisode(episode: Episode) {
         viewModelScope.launch {
+            lastDeletedEpisode = episode
             deleteEpisodeUseCase(episode)
+            _uiEvent.emit(UiEvent.ShowSnackbarWithAction("Deleted ${episode.showName} S${episode.seasonNumber}E${episode.episodeNumber}", "Undo"))
+        }
+    }
+
+    fun undoLastAction() {
+        viewModelScope.launch {
+            lastDeletedShow?.let { show ->
+                trackShowUseCase(show)
+                lastDeletedShow = null
+                _isTracked.value = true
+                _uiEvent.emit(UiEvent.ShowSnackbar("Restored ${show.name}"))
+                return@launch
+            }
+            lastDeletedEpisode?.let { episode ->
+                logEpisodeUseCase(episode)
+                lastDeletedEpisode = null
+                _uiEvent.emit(UiEvent.ShowSnackbar("Restored ${episode.showName} S${episode.seasonNumber}E${episode.episodeNumber}"))
+            }
         }
     }
 }
