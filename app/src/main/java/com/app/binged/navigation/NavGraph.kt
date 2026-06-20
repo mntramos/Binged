@@ -38,6 +38,7 @@ import com.app.binged.feature.shows.ui.EpisodeDetailScreen
 import com.app.binged.feature.shows.ui.ShowDetailScreen
 import com.app.binged.feature.shows.ui.ShowsScreen
 import com.app.binged.feature.tracking.ui.LogEpisodeScreen
+import com.app.binged.feature.tutorial.ui.TutorialScreen
 
 @Composable
 fun BingedNavGraph(
@@ -80,16 +81,30 @@ fun MainAppNav(
     val context = LocalContext.current
     val networkMonitor = remember { NetworkMonitor(context) }
     val isOnline by networkMonitor.isOnline.collectAsState(initial = true)
+    val prefs = remember { context.getSharedPreferences("tutorial_prefs", Context.MODE_PRIVATE) }
+    val hasSeenTutorial = prefs.getBoolean("has_seen_tutorial", false)
+    val startDestination = if (hasSeenTutorial) Route.ShowList.path else Route.Tutorial.path
 
     Box(modifier = Modifier) {
         NavHost(
             navController = navController,
-            startDestination = Route.ShowList.path,
+            startDestination = startDestination,
             enterTransition = { slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(300)) },
             exitTransition = { slideOutHorizontally(targetOffsetX = { -it }, animationSpec = tween(300)) },
             popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(300)) },
             popExitTransition = { slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(300)) }
         ) {
+        composable(Route.Tutorial.path) {
+            TutorialScreen(
+                onDone = {
+                    prefs.edit().putBoolean("has_seen_tutorial", true).apply()
+                    navController.navigate(Route.ShowList.path) {
+                        popUpTo(Route.Tutorial.path) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable(Route.ShowList.path) {
             ShowsScreen(
                 onShowClick = { showId ->
