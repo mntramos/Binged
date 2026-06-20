@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.binged.domain.model.Show
 import com.app.binged.domain.usecase.GetTrackedShowsUseCase
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
@@ -46,7 +47,8 @@ class ShowsViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
-    private val prefs = context.getSharedPreferences("shows_prefs", Context.MODE_PRIVATE)
+    private val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "default"
+    private val prefs = context.getSharedPreferences("shows_prefs_$uid", Context.MODE_PRIVATE)
     private val _isGridView = MutableStateFlow(prefs.getBoolean("is_grid_view", true))
     val isGridView: StateFlow<Boolean> = _isGridView.asStateFlow()
 
