@@ -113,4 +113,5 @@ dependencies {
     implementation(project(":feature:auth"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:statistics"))
+    implementation(project(":feature:tutorial"))
 }
