@@ -1,5 +1,6 @@
 package com.app.binged.data.sync
 
+import android.util.Log
 import com.app.binged.data.database.AppDatabase
 import com.app.binged.data.database.entity.EpisodeEntity
 import com.app.binged.data.database.entity.ShowEntity
@@ -21,6 +22,10 @@ class SyncManager @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val database: AppDatabase
 ) {
+    companion object {
+        private const val TAG = "SyncManager"
+    }
+
     private val uid: String?
         get() = FirebaseAuth.getInstance().currentUser?.uid
 
@@ -93,7 +98,7 @@ class SyncManager @Inject constructor(
                 val entity = doc.toShowEntity() ?: continue
                 database.showDao().insertShow(entity)
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) { Log.e(TAG, "pullAll shows failed", e) }
 
         try {
             val episodesSnapshot = episodesRef.get().await()
@@ -101,7 +106,7 @@ class SyncManager @Inject constructor(
                 val entity = doc.toEpisodeEntity() ?: continue
                 database.episodeDao().insertEpisode(entity)
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) { Log.e(TAG, "pullAll episodes failed", e) }
     }
 
     fun pushShow(show: ShowEntity) {
@@ -112,7 +117,7 @@ class SyncManager @Inject constructor(
                     .collection("trackedShows")
                     .document(show.id.toString())
                     .set(show.toMap())
-            } catch (_: Exception) {}
+            } catch (e: Exception) { Log.e(TAG, "pushShow failed for showId=${show.id}", e) }
         }
     }
 
@@ -124,7 +129,7 @@ class SyncManager @Inject constructor(
                     .collection("watchedEpisodes")
                     .document(episode.id.toString())
                     .set(episode.toMap())
-            } catch (_: Exception) {}
+            } catch (e: Exception) { Log.e(TAG, "pushEpisode failed for episodeId=${episode.id}", e) }
         }
     }
 
@@ -136,7 +141,7 @@ class SyncManager @Inject constructor(
                     .collection("trackedShows")
                     .document(showId.toString())
                     .delete()
-            } catch (_: Exception) {}
+            } catch (e: Exception) { Log.e(TAG, "deleteShow failed for showId=$showId", e) }
         }
     }
 
@@ -153,7 +158,7 @@ class SyncManager @Inject constructor(
                 for (doc in snapshot.documents) {
                     doc.reference.delete()
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) { Log.e(TAG, "deleteEpisode failed for episodeId=$episodeId showId=$showId", e) }
         }
     }
 
@@ -169,7 +174,7 @@ class SyncManager @Inject constructor(
             for (doc in episodesRef.get().await().documents) {
                 doc.reference.delete()
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) { Log.e(TAG, "deleteAll failed", e) }
     }
 }
 
