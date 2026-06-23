@@ -20,6 +20,7 @@ import javax.inject.Singleton
 @Singleton
 class SyncManager @Inject constructor(
     private val firestore: FirebaseFirestore,
+    private val auth: FirebaseAuth,
     private val database: AppDatabase
 ) {
     companion object {
@@ -27,7 +28,7 @@ class SyncManager @Inject constructor(
     }
 
     private val uid: String?
-        get() = FirebaseAuth.getInstance().currentUser?.uid
+        get() = auth.currentUser?.uid
 
     private val listeners = mutableListOf<ListenerRegistration>()
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())

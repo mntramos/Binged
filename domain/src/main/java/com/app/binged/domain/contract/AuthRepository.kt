@@ -11,6 +11,7 @@ interface AuthRepository {
     suspend fun signOut()
     suspend fun deleteAccount(): Result<Unit>
     suspend fun getCurrentUserId(): String?
+    fun getCurrentUserIdSync(): String?
     suspend fun getCurrentUserEmail(): String?
     suspend fun sendEmailVerification(): Result<Unit>
     suspend fun isEmailVerified(): Boolean

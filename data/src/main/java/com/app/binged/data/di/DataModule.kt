@@ -13,6 +13,7 @@ import com.app.binged.data.repository.EpisodeRepositoryImpl
 import com.app.binged.data.repository.ShowRepositoryImpl
 import com.app.binged.domain.contract.EpisodeRepository
 import com.app.binged.domain.contract.ShowRepository
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Binds
 import dagger.Module
@@ -34,6 +35,10 @@ object DataModule {
     @Provides
     @Singleton
     fun provideFirebaseFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
+
+    @Provides
+    @Singleton
+    fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
 
     @Provides
     @Singleton
