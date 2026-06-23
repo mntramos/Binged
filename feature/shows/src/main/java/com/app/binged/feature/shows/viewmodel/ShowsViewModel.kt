@@ -3,12 +3,12 @@ package com.app.binged.feature.shows.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.app.binged.data.sync.SyncManager
 import com.app.binged.domain.model.Show
 import com.app.binged.domain.usecase.GetTrackedShowsUseCase
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ShowsViewModel @Inject constructor(
     getTrackedShowsUseCase: GetTrackedShowsUseCase,
+    private val syncManager: SyncManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
@@ -70,7 +71,7 @@ class ShowsViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             _isRefreshing.value = true
-            delay(300)
+            syncManager.pullAll()
             _isRefreshing.value = false
         }
     }
