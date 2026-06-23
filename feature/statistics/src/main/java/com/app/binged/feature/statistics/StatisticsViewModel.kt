@@ -40,13 +40,13 @@ class StatisticsViewModel @Inject constructor(
         val totalShows = episodes.map { it.showId }.distinct().size
         val totalHours = (totalEpisodes * 30L) / 60
         val episodesThisWeek = episodes.count { episode ->
-            val date = episode.watchedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+            val date = episode.watchedDate.atZone(ZoneId.systemDefault()).toLocalDate()
             val now = Instant.now().atZone(ZoneId.systemDefault()).toLocalDate()
             val daysBetween = Duration.between(date.atStartOfDay(), now.atStartOfDay()).toDays()
             daysBetween in 0..6
         }
         val episodesThisMonth = episodes.count { episode ->
-            val date = episode.watchedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+            val date = episode.watchedDate.atZone(ZoneId.systemDefault()).toLocalDate()
             val now = Instant.now().atZone(ZoneId.systemDefault()).toLocalDate()
             val daysBetween = Duration.between(date.atStartOfDay(), now.atStartOfDay()).toDays()
             daysBetween in 0..29

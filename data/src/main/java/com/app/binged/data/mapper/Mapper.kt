@@ -6,7 +6,7 @@ import com.app.binged.data.model.TmdbEpisodeResponse
 import com.app.binged.data.model.TmdbShowResponse
 import com.app.binged.domain.model.Episode
 import com.app.binged.domain.model.Show
-import java.util.Date
+import java.time.Instant
 
 fun TmdbShowResponse.toDomain(): Show {
     return Show(
@@ -62,7 +62,7 @@ fun TmdbEpisodeResponse.toDomain(showId: Int = 0, showName: String = ""): Episod
         seasonNumber = seasonNumber,
         episodeNumber = episodeNumber,
         title = name,
-        watchedDate = Date(),
+        watchedDate = Instant.now(),
         stillPath = stillPath,
         notes = "",
         overview = overview,
@@ -81,7 +81,7 @@ fun EpisodeEntity.toDomain(): Episode {
         seasonNumber = seasonNumber,
         episodeNumber = episodeNumber,
         title = title,
-        watchedDate = Date(watchedDate),
+        watchedDate = Instant.ofEpochMilli(watchedDate),
         stillPath = stillPath,
         notes = notes
     )
@@ -96,7 +96,7 @@ fun Episode.toEntity(): EpisodeEntity {
         seasonNumber = seasonNumber,
         episodeNumber = episodeNumber,
         title = title,
-        watchedDate = watchedDate.time,
+        watchedDate = watchedDate.toEpochMilli(),
         stillPath = stillPath,
         notes = notes
     )

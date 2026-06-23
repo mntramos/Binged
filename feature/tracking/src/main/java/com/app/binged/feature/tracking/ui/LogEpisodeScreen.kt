@@ -50,9 +50,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.app.binged.core.utils.Result
 import com.app.binged.feature.tracking.viewmodel.LogEpisodeViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,11 +66,11 @@ fun LogEpisodeScreen(
     var episode by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
-    var selectedDate by remember { mutableStateOf(Date()) }
+    var selectedDate by remember { mutableStateOf(Instant.now()) }
 
     val episodeState by viewModel.episodeDetails.collectAsState()
     val verificationState by viewModel.verificationState.collectAsState()
-    val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+    val dateFormat = DateTimeFormatter.ofPattern("MMM dd, yyyy").withZone(ZoneId.systemDefault())
 
     LaunchedEffect(showId) {
         viewModel.setShowId(showId)

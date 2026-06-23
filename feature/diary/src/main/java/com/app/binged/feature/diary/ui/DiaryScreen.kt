@@ -85,7 +85,7 @@ fun DiaryScreen(
     }
 
     val groupedEntries = episodes.groupBy { episode ->
-        val date = episode.watchedDate.toInstant()
+        val date = episode.watchedDate
             .atZone(ZoneId.systemDefault())
             .toLocalDate()
         date.year to date.month.name

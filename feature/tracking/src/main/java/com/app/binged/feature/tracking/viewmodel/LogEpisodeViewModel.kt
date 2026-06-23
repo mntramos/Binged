@@ -12,7 +12,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.util.Date
+import java.time.Instant
 import javax.inject.Inject
 
 @HiltViewModel
@@ -53,7 +53,7 @@ class LogEpisodeViewModel @Inject constructor(
         showName: String,
         seasonNumber: Int,
         episodeNumber: Int,
-        watchedDate: Date,
+        watchedDate: Instant,
         notes: String?
     ) {
         val showId = _showId.value ?: return

@@ -1,6 +1,6 @@
 package com.app.binged.domain.model
 
-import java.util.Date
+import java.time.Instant
 
 data class Episode(
     val id: Long = 0,
@@ -10,7 +10,7 @@ data class Episode(
     val seasonNumber: Int,
     val episodeNumber: Int,
     val title: String,
-    val watchedDate: Date,
+    val watchedDate: Instant,
     val stillPath: String?,
     val notes: String? = null,
     val overview: String = "",
