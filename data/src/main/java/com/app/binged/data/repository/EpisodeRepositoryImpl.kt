@@ -11,9 +11,6 @@ import com.app.binged.domain.model.Episode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
-import javax.inject.Singleton
-
-@Singleton
 class EpisodeRepositoryImpl @Inject constructor(
     private val episodeDao: EpisodeDao,
     private val tmdbService: TmdbService,

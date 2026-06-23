@@ -13,9 +13,6 @@ import com.app.binged.domain.model.Show
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
-import javax.inject.Singleton
-
-@Singleton
 class ShowRepositoryImpl @Inject constructor(
     private val showDao: ShowDao,
     private val episodeDao: EpisodeDao,
