@@ -38,7 +38,7 @@ class StatisticsViewModel @Inject constructor(
     private fun calculateStats(episodes: List<Episode>): UserStats {
         val totalEpisodes = episodes.size
         val totalShows = episodes.map { it.showId }.distinct().size
-        val totalHours = (totalEpisodes * 30L) / 60
+        val totalHours = episodes.sumOf { it.runtime.toLong() } / 60
         val episodesThisWeek = episodes.count { episode ->
             val date = episode.watchedDate.atZone(ZoneId.systemDefault()).toLocalDate()
             val now = Instant.now().atZone(ZoneId.systemDefault()).toLocalDate()
