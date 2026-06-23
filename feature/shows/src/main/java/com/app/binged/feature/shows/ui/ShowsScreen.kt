@@ -87,7 +87,7 @@ fun ShowsScreen(
     val pullRefreshState = rememberPullToRefreshState()
 
     if (pullRefreshState.isRefreshing) {
-        LaunchedEffect(true) {
+        LaunchedEffect(pullRefreshState.isRefreshing) {
             viewModel.refresh()
             pullRefreshState.endRefresh()
         }

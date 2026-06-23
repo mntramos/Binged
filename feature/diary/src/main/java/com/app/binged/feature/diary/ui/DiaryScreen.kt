@@ -61,7 +61,7 @@ fun DiaryScreen(
     var pendingDeletion by remember { mutableStateOf<Episode?>(null) }
 
     if (pullRefreshState.isRefreshing) {
-        LaunchedEffect(true) {
+        LaunchedEffect(pullRefreshState.isRefreshing) {
             viewModel.refresh()
             pullRefreshState.endRefresh()
         }

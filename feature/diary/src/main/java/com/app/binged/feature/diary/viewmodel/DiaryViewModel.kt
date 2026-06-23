@@ -3,12 +3,12 @@ package com.app.binged.feature.diary.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.binged.core.utils.UiEvent
+import com.app.binged.data.sync.SyncManager
 import com.app.binged.domain.model.Episode
 import com.app.binged.domain.usecase.DeleteEpisodeUseCase
 import com.app.binged.domain.usecase.GetAllEpisodesUseCase
 import com.app.binged.domain.usecase.LogEpisodeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,6 +24,7 @@ import javax.inject.Inject
 class DiaryViewModel @Inject constructor(
     private val deleteEpisodeUseCase: DeleteEpisodeUseCase,
     private val logEpisodeUseCase: LogEpisodeUseCase,
+    private val syncManager: SyncManager,
     getAllEpisodesUseCase: GetAllEpisodesUseCase
 ) : ViewModel() {
     val episodes: StateFlow<List<Episode>> = getAllEpisodesUseCase()
@@ -45,7 +46,7 @@ class DiaryViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             _isRefreshing.value = true
-            delay(300)
+            syncManager.pullAll()
             _isRefreshing.value = false
         }
     }
