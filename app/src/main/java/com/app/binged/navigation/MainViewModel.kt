@@ -8,7 +8,6 @@ import com.app.binged.domain.contract.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -31,9 +30,14 @@ class MainViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            authState.first { it }
-            syncManager.startListening()
-            syncManager.pullAll()
+            authRepository.authState().collect { authenticated ->
+                if (authenticated) {
+                    syncManager.startListening()
+                    syncManager.pullAll()
+                } else {
+                    syncManager.stopListening()
+                }
+            }
         }
     }
 }

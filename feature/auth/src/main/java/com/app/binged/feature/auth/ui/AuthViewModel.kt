@@ -32,7 +32,6 @@ class AuthViewModel @Inject constructor(
             when (val result = authRepository.signInWithEmail(email, password)) {
                 is Result.Success -> {
                     syncManager.pullAll()
-                    syncManager.startListening()
                     _authResult.emit(kotlin.Result.success(Unit))
                 }
                 is Result.Error -> _authResult.emit(kotlin.Result.failure(result.exception))
@@ -56,7 +55,6 @@ class AuthViewModel @Inject constructor(
             when (val result = authRepository.signInWithGoogle(idToken)) {
                 is Result.Success -> {
                     syncManager.pullAll()
-                    syncManager.startListening()
                     _authResult.emit(kotlin.Result.success(Unit))
                 }
                 is Result.Error -> _authResult.emit(kotlin.Result.failure(result.exception))
