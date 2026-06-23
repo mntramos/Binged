@@ -4,14 +4,13 @@ import android.util.Log
 import com.app.binged.data.database.AppDatabase
 import com.app.binged.data.database.entity.EpisodeEntity
 import com.app.binged.data.database.entity.ShowEntity
+import com.app.binged.data.di.ApplicationScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -21,7 +20,8 @@ import javax.inject.Singleton
 class SyncManager @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val auth: FirebaseAuth,
-    private val database: AppDatabase
+    private val database: AppDatabase,
+    @ApplicationScope private val scope: CoroutineScope
 ) {
     companion object {
         private const val TAG = "SyncManager"
@@ -31,7 +31,6 @@ class SyncManager @Inject constructor(
         get() = auth.currentUser?.uid
 
     private val listeners = mutableListOf<ListenerRegistration>()
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     fun startListening() {
         val user = uid ?: return
