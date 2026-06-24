@@ -37,6 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -65,6 +66,7 @@ import coil.compose.AsyncImage
 import com.app.binged.core.utils.Result
 import com.app.binged.core.utils.UiEvent
 import com.app.binged.feature.shows.viewmodel.ShowDetailViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -101,16 +103,21 @@ fun ShowDetailScreen(
     }
 
     LaunchedEffect("snackbar") {
+        var snackbarJob: Job? = null
         viewModel.uiEvent.collect { event ->
-            when (event) {
-                is UiEvent.ShowSnackbar -> launch { snackbarHostState.showSnackbar(event.message) }
-                is UiEvent.ShowSnackbarWithAction -> launch {
-                    val result = snackbarHostState.showSnackbar(
-                        message = event.message,
-                        actionLabel = event.actionLabel
-                    )
-                    if (result == SnackbarResult.ActionPerformed) {
-                        viewModel.undoLastAction()
+            snackbarJob?.cancel()
+            snackbarJob = launch {
+                when (event) {
+                    is UiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
+                    is UiEvent.ShowSnackbarWithAction -> {
+                        val result = snackbarHostState.showSnackbar(
+                            message = event.message,
+                            actionLabel = event.actionLabel,
+                            duration = SnackbarDuration.Long
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            viewModel.undoLastAction()
+                        }
                     }
                 }
             }

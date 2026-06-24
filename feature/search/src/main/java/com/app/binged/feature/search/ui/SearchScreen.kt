@@ -15,8 +15,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
@@ -40,6 +42,7 @@ import com.app.binged.core.utils.Result
 import com.app.binged.core.utils.UiEvent
 import com.app.binged.domain.model.Show
 import com.app.binged.feature.search.viewmodel.SearchViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -98,11 +101,25 @@ fun SearchScreen(
     }
 
     LaunchedEffect("snackbar") {
+        var snackbarJob: Job? = null
         viewModel.uiEvent.collect { event ->
-            when (event) {
-                is UiEvent.ShowSnackbar -> launch { snackbarHostState.showSnackbar(event.message) }
-                is UiEvent.ShowSnackbarWithAction -> {
-                    launch { snackbarHostState.showSnackbar(event.message) }
+            snackbarJob?.cancel()
+            snackbarJob = launch {
+                when (event) {
+                    is UiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(
+                        event.message,
+                        duration = SnackbarDuration.Short
+                    )
+                    is UiEvent.ShowSnackbarWithAction -> {
+                        val result = snackbarHostState.showSnackbar(
+                            message = event.message,
+                            actionLabel = event.actionLabel,
+                            duration = SnackbarDuration.Long
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            // TODO: add undo handling when SearchViewModel supports it
+                        }
+                    }
                 }
             }
         }

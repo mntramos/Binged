@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -44,6 +45,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.binged.core.utils.UiEvent
 import com.app.binged.domain.model.Episode
 import com.app.binged.feature.diary.viewmodel.DiaryViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 
@@ -68,16 +70,24 @@ fun DiaryScreen(
     }
 
     LaunchedEffect("snackbar") {
+        var snackbarJob: Job? = null
         viewModel.uiEvent.collect { event ->
-            when (event) {
-                is UiEvent.ShowSnackbar -> launch { snackbarHostState.showSnackbar(event.message) }
-                is UiEvent.ShowSnackbarWithAction -> launch {
-                    val result = snackbarHostState.showSnackbar(
-                        message = event.message,
-                        actionLabel = event.actionLabel
+            snackbarJob?.cancel()
+            snackbarJob = launch {
+                when (event) {
+                    is UiEvent.ShowSnackbar -> snackbarHostState.showSnackbar(
+                        event.message,
+                        duration = SnackbarDuration.Short
                     )
-                    if (result == SnackbarResult.ActionPerformed) {
-                        viewModel.undoLastAction()
+                    is UiEvent.ShowSnackbarWithAction -> {
+                        val result = snackbarHostState.showSnackbar(
+                            message = event.message,
+                            actionLabel = event.actionLabel,
+                            duration = SnackbarDuration.Long
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            viewModel.undoLastAction()
+                        }
                     }
                 }
             }
