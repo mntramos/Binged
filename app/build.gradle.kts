@@ -11,7 +11,7 @@ plugins {
 fun calculateVersionCode(versionName: String): Int {
     val (major, minor, patch) = versionName.split(".")
         .map { it.toIntOrNull() ?: 0 }
-    return major * 10000 + minor * 100 + patch
+    return major * 1_000_000 + minor * 10_000 + patch
 }
 
 android {
