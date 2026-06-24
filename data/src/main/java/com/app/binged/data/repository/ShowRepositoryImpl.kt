@@ -11,6 +11,7 @@ import com.app.binged.domain.contract.ShowRepository
 import com.app.binged.domain.model.PaginatedResult
 import com.app.binged.domain.model.Show
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -77,15 +78,17 @@ class ShowRepositoryImpl @Inject constructor(
 
     override suspend fun updateFavoriteStatus(show: Show, isFavorite: Boolean): Int {
         val result = showDao.updateFavoriteStatus(show.id, isFavorite)
-        val entity = show.toEntity().copy(isFavorite = isFavorite)
-        syncManager.pushShow(entity)
+        if (result > 0) {
+            showDao.getShowById(show.id).first()?.let(syncManager::pushShow)
+        }
         return result
     }
 
     override suspend fun updateWatchingStatus(show: Show, isWatching: Boolean): Int {
         val result = showDao.updateWatchingStatus(show.id, isWatching)
-        val entity = show.toEntity().copy(isWatching = isWatching)
-        syncManager.pushShow(entity)
+        if (result > 0) {
+            showDao.getShowById(show.id).first()?.let(syncManager::pushShow)
+        }
         return result
     }
 
