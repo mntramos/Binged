@@ -202,7 +202,8 @@ private fun EpisodeEntity.toMap(): Map<String, Any?> = mapOf(
     "title" to title,
     "watchedDate" to watchedDate,
     "stillPath" to stillPath,
-    "notes" to notes
+    "notes" to notes,
+    "runtime" to runtime.toLong()
 )
 
 private fun DocumentSnapshot.toShowEntity(): ShowEntity? {
@@ -234,6 +235,7 @@ private fun DocumentSnapshot.toEpisodeEntity(): EpisodeEntity? {
         title = getString("title") ?: "",
         watchedDate = getLong("watchedDate") ?: 0L,
         stillPath = getString("stillPath"),
-        notes = getString("notes")
+        notes = getString("notes"),
+        runtime = (getLong("runtime") ?: 0L).toInt()
     )
 }
