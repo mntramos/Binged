@@ -1,6 +1,6 @@
 package com.app.binged.feature.search.viewmodel
 
-import android.database.sqlite.SQLiteConstraintException
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.binged.core.utils.Result
@@ -137,10 +137,13 @@ class SearchViewModel @Inject constructor(
             try {
                 trackShowUseCase(show)
                 _uiEvent.emit(UiEvent.ShowSnackbar("Successfully added ${show.name}"))
-            } catch (_: SQLiteConstraintException) {
-                _uiEvent.emit(UiEvent.ShowSnackbar("${show.name} already added"))
-            } catch (_: Exception) {
-                _uiEvent.emit(UiEvent.ShowSnackbar("Failed to add ${show.name}"))
+            } catch (e: Exception) {
+                val msg = e.message ?: ""
+                if (msg.contains("UNIQUE", ignoreCase = true) || msg.contains("constraint", ignoreCase = true)) {
+                    _uiEvent.emit(UiEvent.ShowSnackbar("${show.name} already added"))
+                } else {
+                    _uiEvent.emit(UiEvent.ShowSnackbar("Failed to add ${show.name}"))
+                }
             }
         }
     }
