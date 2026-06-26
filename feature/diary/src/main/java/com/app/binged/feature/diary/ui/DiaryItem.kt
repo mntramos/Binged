@@ -112,7 +112,7 @@ fun DiaryItem(
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Text(
-                        text = java.text.SimpleDateFormat("dd", java.util.Locale.getDefault()).format(episode.watchedDate),
+                        text = java.time.format.DateTimeFormatter.ofPattern("dd").withZone(java.time.ZoneId.systemDefault()).format(episode.watchedDate),
                         modifier = Modifier
                             .size(40.dp)
                             .background(

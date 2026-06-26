@@ -43,14 +43,16 @@ class AuthRepositoryImpl @Inject constructor(
                 Result.Success(Unit)
             }
         } catch (e: FirebaseAuthInvalidUserException) {
-            Result.Error(Exception("Incorrect e-mail/password. Please try again"))
+            Result.Error(Exception("No account found with this email address"))
         } catch (e: FirebaseAuthInvalidCredentialsException) {
-            Result.Error(Exception("Incorrect e-mail/password. Please try again"))
+            Result.Error(Exception("Incorrect password. Please try again"))
         } catch (e: Exception) {
             val msg = e.message ?: ""
             when {
-                "INVALID_LOGIN_CREDENTIALS" in msg -> Result.Error(Exception("Incorrect e-mail/password. Please try again"))
-                else -> Result.Error(Exception("Incorrect e-mail/password. Please try again"))
+                "INVALID_LOGIN_CREDENTIALS" in msg -> Result.Error(Exception("Incorrect email or password. Please try again"))
+                "USER_DISABLED" in msg -> Result.Error(Exception("This account has been disabled. Contact support."))
+                "TOO_MANY_ATTEMPTS_TRY_LATER" in msg -> Result.Error(Exception("Too many login attempts. Please try again later."))
+                else -> Result.Error(Exception("Sign in failed. Please try again."))
             }
         }
     }
@@ -84,8 +86,15 @@ class AuthRepositoryImpl @Inject constructor(
             auth.signInWithCredential(credential).await()
             auth.currentUser?.reload()?.await()
             Result.Success(Unit)
+        } catch (e: FirebaseAuthInvalidCredentialsException) {
+            Result.Error(Exception("Invalid Google sign-in. Please try again."))
         } catch (e: Exception) {
-            Result.Error(e)
+            val msg = e.message ?: ""
+            when {
+                "NETWORK_ERROR" in msg || e is java.net.UnknownHostException ->
+                    Result.Error(Exception("Network error. Please check your internet connection."))
+                else -> Result.Error(Exception("Google sign-in failed. Please try again."))
+            }
         }
     }
 

@@ -25,9 +25,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 data class ExportData(
@@ -58,8 +58,8 @@ class SettingsViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val gson: Gson = GsonBuilder()
-        .registerTypeAdapter(Date::class.java, DateSerializer())
-        .registerTypeAdapter(Date::class.java, DateDeserializer())
+        .registerTypeAdapter(Instant::class.java, InstantSerializer())
+        .registerTypeAdapter(Instant::class.java, InstantDeserializer())
         .create()
 
     private val _uiState = MutableStateFlow<SettingsUiState>(SettingsUiState.Idle)
@@ -115,15 +115,15 @@ class SettingsViewModel @Inject constructor(
             try {
                 val shows = showRepository.getTrackedShows().first()
                 val episodes = episodeRepository.getAllEpisodes().first()
-                val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
+                val now = Instant.now()
                 val exportData = ExportData(
                     version = 1,
-                    exportedAt = dateFormat.format(Date()),
+                    exportedAt = now.toString(),
                     shows = shows,
                     episodes = episodes
                 )
                 val json = gson.toJson(exportData)
-                val filename = "binged-export-${SimpleDateFormat("yyyyMMdd", Locale.US).format(Date())}.json"
+                val filename = "binged-export-${DateTimeFormatter.ofPattern("yyyyMMdd").withZone(ZoneId.systemDefault()).format(now)}.json"
                 _events.emit(SettingsEvent.ShareJson(json, filename))
             } catch (e: Exception) {
                 _events.emit(SettingsEvent.ShowError("Export failed: ${e.message}"))
@@ -167,16 +167,14 @@ class SettingsViewModel @Inject constructor(
 
 }
 
-private class DateSerializer : com.google.gson.JsonSerializer<Date> {
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
-    override fun serialize(src: Date, typeOfSrc: java.lang.reflect.Type, context: com.google.gson.JsonSerializationContext): com.google.gson.JsonElement {
-        return com.google.gson.JsonPrimitive(dateFormat.format(src))
+private class InstantSerializer : com.google.gson.JsonSerializer<Instant> {
+    override fun serialize(src: Instant, typeOfSrc: java.lang.reflect.Type, context: com.google.gson.JsonSerializationContext): com.google.gson.JsonElement {
+        return com.google.gson.JsonPrimitive(src.toString())
     }
 }
 
-private class DateDeserializer : com.google.gson.JsonDeserializer<Date> {
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
-    override fun deserialize(json: com.google.gson.JsonElement, typeOfT: java.lang.reflect.Type, context: com.google.gson.JsonDeserializationContext): Date {
-        return dateFormat.parse(json.asString) ?: Date()
+private class InstantDeserializer : com.google.gson.JsonDeserializer<Instant> {
+    override fun deserialize(json: com.google.gson.JsonElement, typeOfT: java.lang.reflect.Type, context: com.google.gson.JsonDeserializationContext): Instant {
+        return Instant.parse(json.asString)
     }
 }
