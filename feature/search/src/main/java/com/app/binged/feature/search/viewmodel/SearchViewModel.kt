@@ -68,12 +68,10 @@ class SearchViewModel @Inject constructor(
         loadPopularShows()
     }
 
-    fun refresh() {
-        viewModelScope.launch {
-            _isRefreshing.value = true
-            _popularShows.value = getPopularShowsUseCase()
-            _isRefreshing.value = false
-        }
+    suspend fun refresh() {
+        _isRefreshing.value = true
+        _popularShows.value = getPopularShowsUseCase()
+        _isRefreshing.value = false
     }
 
     private fun loadPopularShows() {

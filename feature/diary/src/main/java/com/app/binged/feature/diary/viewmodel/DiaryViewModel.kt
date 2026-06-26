@@ -43,12 +43,10 @@ class DiaryViewModel @Inject constructor(
 
     private var lastDeletedEpisode: Episode? = null
 
-    fun refresh() {
-        viewModelScope.launch {
-            _isRefreshing.value = true
-            syncManager.pullAll()
-            _isRefreshing.value = false
-        }
+    suspend fun refresh() {
+        _isRefreshing.value = true
+        syncManager.pullAll()
+        _isRefreshing.value = false
     }
 
     fun deleteEpisode(episode: Episode) {

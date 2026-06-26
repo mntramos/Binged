@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
+
 import javax.inject.Inject
 
 @HiltViewModel
@@ -68,12 +68,10 @@ class ShowsViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
-    fun refresh() {
-        viewModelScope.launch {
-            _isRefreshing.value = true
-            syncManager.pullAll()
-            _isRefreshing.value = false
-        }
+    suspend fun refresh() {
+        _isRefreshing.value = true
+        syncManager.pullAll()
+        _isRefreshing.value = false
     }
 
     fun toggleView() {

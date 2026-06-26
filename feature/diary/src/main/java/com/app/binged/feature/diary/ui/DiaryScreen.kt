@@ -46,6 +46,7 @@ import com.app.binged.core.utils.UiEvent
 import com.app.binged.domain.model.Episode
 import com.app.binged.feature.diary.viewmodel.DiaryViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 
@@ -57,7 +58,6 @@ fun DiaryScreen(
     viewModel: DiaryViewModel = hiltViewModel()
 ) {
     val episodes by viewModel.episodes.collectAsState()
-    val isRefreshing by viewModel.isRefreshing.collectAsState()
     val pullRefreshState = rememberPullToRefreshState()
     val snackbarHostState = remember { SnackbarHostState() }
     var pendingDeletion by remember { mutableStateOf<Episode?>(null) }
@@ -65,6 +65,7 @@ fun DiaryScreen(
     if (pullRefreshState.isRefreshing) {
         LaunchedEffect(pullRefreshState.isRefreshing) {
             viewModel.refresh()
+            delay(500L)
             pullRefreshState.endRefresh()
         }
     }
@@ -147,10 +148,12 @@ fun DiaryScreen(
                         modifier = Modifier.padding(horizontal = 32.dp)
                     )
                 }
-                PullToRefreshContainer(
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    state = pullRefreshState
-                )
+                if (pullRefreshState.isRefreshing || pullRefreshState.progress > 0f) {
+                    PullToRefreshContainer(
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        state = pullRefreshState
+                    )
+                }
             }
         } else {
             Box(
@@ -181,10 +184,12 @@ fun DiaryScreen(
                         }
                     }
                 }
-                PullToRefreshContainer(
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    state = pullRefreshState
-                )
+                if (pullRefreshState.isRefreshing || pullRefreshState.progress > 0f) {
+                    PullToRefreshContainer(
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        state = pullRefreshState
+                    )
+                }
             }
         }
     }

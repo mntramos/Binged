@@ -57,6 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.delay
 import com.app.binged.domain.model.Show
 import com.app.binged.feature.shows.viewmodel.ShowsViewModel
 import kotlin.math.roundToInt
@@ -83,12 +84,12 @@ fun ShowsScreen(
     val displayShows = if (showSearch) filteredShows else shows
     val watching = displayShows.filter { it.isWatching }
     val favorites = displayShows.filter { it.isFavorite }
-    val isRefreshing by viewModel.isRefreshing.collectAsState()
     val pullRefreshState = rememberPullToRefreshState()
 
     if (pullRefreshState.isRefreshing) {
         LaunchedEffect(pullRefreshState.isRefreshing) {
             viewModel.refresh()
+            delay(500L)
             pullRefreshState.endRefresh()
         }
     }
@@ -279,10 +280,12 @@ fun ShowsScreen(
                         }
                     }
                 }
-                    PullToRefreshContainer(
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        state = pullRefreshState
-                    )
+                    if (pullRefreshState.isRefreshing || pullRefreshState.progress > 0f) {
+                        PullToRefreshContainer(
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            state = pullRefreshState
+                        )
+                    }
                 }
             } else {
                 Box(
@@ -327,10 +330,12 @@ fun ShowsScreen(
                         }
                     }
                     }
-                    PullToRefreshContainer(
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        state = pullRefreshState
-                    )
+                    if (pullRefreshState.isRefreshing || pullRefreshState.progress > 0f) {
+                        PullToRefreshContainer(
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            state = pullRefreshState
+                        )
+                    }
                 }
             }
         }
