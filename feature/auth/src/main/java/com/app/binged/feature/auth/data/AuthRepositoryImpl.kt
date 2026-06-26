@@ -18,9 +18,9 @@ import javax.inject.Singleton
 class EmailNotVerifiedException : Exception("Please verify your email before logging in")
 
 @Singleton
-class AuthRepositoryImpl @Inject constructor() : AuthRepository {
-
-    private val auth = FirebaseAuth.getInstance()
+class AuthRepositoryImpl @Inject constructor(
+    private val auth: FirebaseAuth
+) : AuthRepository {
 
     override fun authState(): Flow<Boolean> = callbackFlow {
         trySend(auth.currentUser?.isEmailVerified == true)
@@ -103,6 +103,10 @@ class AuthRepositoryImpl @Inject constructor() : AuthRepository {
     }
 
     override suspend fun getCurrentUserId(): String? {
+        return auth.currentUser?.uid
+    }
+
+    override fun getCurrentUserIdSync(): String? {
         return auth.currentUser?.uid
     }
 

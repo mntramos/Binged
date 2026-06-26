@@ -3,6 +3,7 @@ package com.app.binged.feature.settings.ui
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -310,7 +311,15 @@ fun SettingsScreen(
 
 private fun getAppVersion(context: android.content.Context): String {
     return try {
-        val info = context.packageManager.getPackageInfo(context.packageName, 0)
+        val info = if (Build.VERSION.SDK_INT >= 33) {
+            context.packageManager.getPackageInfo(
+                context.packageName,
+                PackageManager.PackageInfoFlags.of(0)
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            context.packageManager.getPackageInfo(context.packageName, 0)
+        }
         info.versionName ?: "Unknown"
     } catch (e: PackageManager.NameNotFoundException) {
         "Unknown"

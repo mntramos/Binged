@@ -87,12 +87,12 @@ class SettingsViewModel @Inject constructor(
     fun deleteAccount() {
         viewModelScope.launch {
             _uiState.value = SettingsUiState.Loading
-            syncManager.deleteAll()
-            syncManager.stopListening()
-            showRepository.deleteAll()
-            episodeRepository.deleteAll()
             when (val result = authRepository.deleteAccount()) {
                 is Result.Success -> {
+                    syncManager.deleteAll()
+                    syncManager.stopListening()
+                    showRepository.deleteAll()
+                    episodeRepository.deleteAll()
                     _uiState.value = SettingsUiState.Idle
                     authRepository.signOut()
                 }
@@ -103,7 +103,6 @@ class SettingsViewModel @Inject constructor(
                             result.exception.message ?: "Failed to delete account. You've been signed out — please log in again and retry."
                         )
                     )
-                    authRepository.signOut()
                 }
                 is Result.Loading -> {}
             }

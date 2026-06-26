@@ -26,9 +26,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.app.binged.core.utils.NetworkMonitor
 import com.app.binged.feature.auth.ui.AuthViewModel
-import com.google.firebase.auth.FirebaseAuth
 import com.app.binged.feature.auth.ui.LoginScreen
 import com.app.binged.feature.auth.ui.RegisterScreen
 import com.app.binged.feature.diary.ui.DiaryScreen
@@ -48,7 +46,7 @@ fun BingedNavGraph(
     val isAuthenticated by mainViewModel.authState.collectAsState()
 
     if (isAuthenticated) {
-        MainAppNav()
+        MainAppNav(mainViewModel = mainViewModel)
     } else {
         AuthNav()
     }
@@ -77,12 +75,12 @@ fun AuthNav(
 
 @Composable
 fun MainAppNav(
+    mainViewModel: MainViewModel,
     navController: NavHostController = rememberNavController()
 ) {
     val context = LocalContext.current
-    val networkMonitor = remember { NetworkMonitor(context) }
-    val isOnline by networkMonitor.isOnline.collectAsState(initial = true)
-    val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "default"
+    val isOnline by mainViewModel.isOnline.collectAsState()
+    val uid = mainViewModel.currentUserId
     val prefs = remember { context.getSharedPreferences("tutorial_prefs_$uid", Context.MODE_PRIVATE) }
     val hasSeenTutorial = prefs.getBoolean("has_seen_tutorial", false)
     val startDestination = if (hasSeenTutorial) Route.ShowList.path else Route.Tutorial.path
