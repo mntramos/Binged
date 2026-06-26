@@ -83,7 +83,8 @@ fun EpisodeEntity.toDomain(): Episode {
         title = title,
         watchedDate = Instant.ofEpochMilli(watchedDate),
         stillPath = stillPath,
-        notes = notes
+        notes = notes,
+        runtime = runtime
     )
 }
 
@@ -98,6 +99,7 @@ fun Episode.toEntity(): EpisodeEntity {
         title = title,
         watchedDate = watchedDate.toEpochMilli(),
         stillPath = stillPath,
-        notes = notes
+        notes = notes,
+        runtime = runtime
     )
 }

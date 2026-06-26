@@ -56,7 +56,7 @@ object DataModule {
             context,
             AppDatabase::class.java,
             "binged_db"
-        ).fallbackToDestructiveMigration().build()
+        ).addMigrations(AppDatabase.MIGRATION_1_2).build()
     }
 
     @Provides

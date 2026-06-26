@@ -17,7 +17,7 @@ import javax.inject.Inject
 data class UserStats(
     val totalEpisodes: Int = 0,
     val totalShows: Int = 0,
-    val totalHours: Long = 0,
+    val totalMinutes: Long = 0,
     val episodesThisWeek: Int = 0,
     val episodesThisMonth: Int = 0
 )
@@ -38,7 +38,7 @@ class StatisticsViewModel @Inject constructor(
     private fun calculateStats(episodes: List<Episode>): UserStats {
         val totalEpisodes = episodes.size
         val totalShows = episodes.map { it.showId }.distinct().size
-        val totalHours = episodes.sumOf { it.runtime.toLong() } / 60
+        val totalMinutes = episodes.sumOf { it.runtime.toLong() }
         val episodesThisWeek = episodes.count { episode ->
             val date = episode.watchedDate.atZone(ZoneId.systemDefault()).toLocalDate()
             val now = Instant.now().atZone(ZoneId.systemDefault()).toLocalDate()
@@ -48,14 +48,13 @@ class StatisticsViewModel @Inject constructor(
         val episodesThisMonth = episodes.count { episode ->
             val date = episode.watchedDate.atZone(ZoneId.systemDefault()).toLocalDate()
             val now = Instant.now().atZone(ZoneId.systemDefault()).toLocalDate()
-            val daysBetween = Duration.between(date.atStartOfDay(), now.atStartOfDay()).toDays()
-            daysBetween in 0..29
+            date.year == now.year && date.month == now.month
         }
 
         return UserStats(
             totalEpisodes = totalEpisodes,
             totalShows = totalShows,
-            totalHours = totalHours,
+            totalMinutes = totalMinutes,
             episodesThisWeek = episodesThisWeek,
             episodesThisMonth = episodesThisMonth
         )

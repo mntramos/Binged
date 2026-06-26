@@ -77,7 +77,14 @@ fun StatisticsScreen(
             StatCard(
                 icon = Icons.Filled.Schedule,
                 label = "Hours Watched",
-                value = "${stats.totalHours}h"
+                value = buildString {
+                    val h = stats.totalMinutes / 60
+                    val m = stats.totalMinutes % 60
+                    if (h > 0) append("${h}h")
+                    if (h > 0 && m > 0) append(" ")
+                    if (m > 0) append("${m}m")
+                    if (h == 0L && m == 0L) append("0m")
+                }
             )
             StatCard(
                 icon = Icons.Filled.DateRange,
