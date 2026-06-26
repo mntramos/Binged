@@ -63,12 +63,12 @@ fun SearchScreen(
     val focusRequester = remember { FocusRequester() }
     val snackbarHostState = remember { SnackbarHostState() }
     var showToUntrack by remember { mutableStateOf<Show?>(null) }
-    val isRefreshing by viewModel.isRefreshing.collectAsState()
     val pullRefreshState = rememberPullToRefreshState()
 
     if (pullRefreshState.isRefreshing) {
-        LaunchedEffect(true) {
+        LaunchedEffect(pullRefreshState.isRefreshing) {
             viewModel.refresh()
+            delay(500L)
             pullRefreshState.endRefresh()
         }
     }
@@ -197,10 +197,12 @@ fun SearchScreen(
                                             )
                                         }
                                     }
-                                    PullToRefreshContainer(
-                                        modifier = Modifier.align(Alignment.TopCenter),
-                                        state = pullRefreshState
-                                    )
+                                    if (pullRefreshState.isRefreshing || pullRefreshState.progress > 0f) {
+                                        PullToRefreshContainer(
+                                            modifier = Modifier.align(Alignment.TopCenter),
+                                            state = pullRefreshState
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -253,10 +255,12 @@ fun SearchScreen(
                                 }
                             }
                         }
-                        PullToRefreshContainer(
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            state = pullRefreshState
-                        )
+                        if (pullRefreshState.isRefreshing || pullRefreshState.progress > 0f) {
+                            PullToRefreshContainer(
+                                modifier = Modifier.align(Alignment.TopCenter),
+                                state = pullRefreshState
+                            )
+                        }
                     }
                 }
                 else -> {
