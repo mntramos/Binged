@@ -23,3 +23,8 @@
 
 # Coil
 -dontwarn coil.**
+
+# Gson serialization (diary import/export)
+-keep class com.app.binged.feature.settings.ui.ExportData { *; }
+-keep class com.app.binged.domain.model.Show { *; }
+-keep class com.app.binged.domain.model.Episode { *; }
