@@ -302,7 +302,11 @@ fun ShowDetailScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "Season $season (${seasonEpisodes.count { it.episodeId in watchedIds }}/${seasonEpisodes.size})",
+                                        text = if (catalog.isEmpty()) {
+                                            "Season $season"
+                                        } else {
+                                            "Season $season (${seasonEpisodes.count { it.episodeId in watchedIds }}/${seasonEpisodes.size})"
+                                        },
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.weight(1f)

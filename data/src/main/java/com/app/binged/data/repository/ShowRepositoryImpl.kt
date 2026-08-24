@@ -1,5 +1,6 @@
 package com.app.binged.data.repository
 
+import com.app.binged.core.utils.NetworkMonitor
 import com.app.binged.core.utils.Result
 import com.app.binged.data.api.TmdbService
 import com.app.binged.data.database.dao.EpisodeDao
@@ -19,7 +20,8 @@ class ShowRepositoryImpl @Inject constructor(
     private val showDao: ShowDao,
     private val episodeDao: EpisodeDao,
     private val tmdbService: TmdbService,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val networkMonitor: NetworkMonitor
 ) : ShowRepository {
 
     override fun getTrackedShows(): Flow<List<Show>> {
@@ -44,12 +46,19 @@ class ShowRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getShowDetails(id: Int): Result<Show> {
+        if (networkMonitor.isOnline.first() == false) {
+            getLocalShow(id)?.let { return it }
+        }
         return try {
             val response = tmdbService.getShowDetails(id)
             Result.Success(response.toDomain())
         } catch (e: Exception) {
-            Result.Error(e)
+            getLocalShow(id) ?: Result.Error(e)
         }
+    }
+
+    private suspend fun getLocalShow(id: Int): Result<Show>? {
+        return showDao.getShowById(id).first()?.let { Result.Success(it.toDomain()) }
     }
 
     override suspend fun getPopularShows(): Result<List<Show>> {

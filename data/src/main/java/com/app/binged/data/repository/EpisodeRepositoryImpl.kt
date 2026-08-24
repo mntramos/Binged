@@ -1,5 +1,6 @@
 package com.app.binged.data.repository
 
+import com.app.binged.core.utils.NetworkMonitor
 import com.app.binged.core.utils.Result
 import com.app.binged.data.api.TmdbService
 import com.app.binged.data.database.dao.EpisodeDao
@@ -9,12 +10,14 @@ import com.app.binged.data.sync.SyncManager
 import com.app.binged.domain.contract.EpisodeRepository
 import com.app.binged.domain.model.Episode
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 class EpisodeRepositoryImpl @Inject constructor(
     private val episodeDao: EpisodeDao,
     private val tmdbService: TmdbService,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val networkMonitor: NetworkMonitor
 ) : EpisodeRepository {
 
     override fun getAllEpisodes(): Flow<List<Episode>> {
@@ -30,12 +33,19 @@ class EpisodeRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getEpisodeDetails(id: Int, season: Int, episode: Int): Result<Episode> {
+        if (networkMonitor.isOnline.first() == false) {
+            localEpisodeResult(id, season, episode)?.let { return it }
+        }
         return try {
             val response = tmdbService.getEpisodeDetails(id, season, episode)
             Result.Success(response.toDomain(showId = id))
         } catch (e: Exception) {
-            Result.Error(e)
+            localEpisodeResult(id, season, episode) ?: Result.Error(e)
         }
+    }
+
+    private suspend fun localEpisodeResult(id: Int, season: Int, episode: Int): Result<Episode>? {
+        return getLocalEpisode(id, season, episode)?.let { Result.Success(it) }
     }
 
     override suspend fun getLocalEpisode(showId: Int, seasonNumber: Int, episodeNumber: Int): Episode? {
