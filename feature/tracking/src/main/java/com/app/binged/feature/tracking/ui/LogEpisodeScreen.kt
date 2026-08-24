@@ -59,11 +59,13 @@ import java.time.format.DateTimeFormatter
 fun LogEpisodeScreen(
     showId: Int,
     showName: String,
+    initialSeason: Int = 0,
+    initialEpisode: Int = 0,
     onNavigateBack: () -> Unit,
     viewModel: LogEpisodeViewModel = hiltViewModel()
 ) {
-    var season by remember { mutableStateOf("") }
-    var episode by remember { mutableStateOf("") }
+    var season by remember { mutableStateOf(if (initialSeason > 0) initialSeason.toString() else "") }
+    var episode by remember { mutableStateOf(if (initialEpisode > 0) initialEpisode.toString() else "") }
     var notes by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(Instant.now()) }

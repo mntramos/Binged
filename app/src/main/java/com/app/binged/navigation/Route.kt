@@ -11,8 +11,9 @@ sealed class Route(val path: String) {
             "show_detail/$showId?fromSearch=$fromSearch"
     }
 
-    data object LogEpisode : Route("log_episode/{showId}") {
-        fun createRoute(showId: Int) = "log_episode/$showId"
+    data object LogEpisode : Route("log_episode/{showId}?season={season}&episode={episode}") {
+        fun createRoute(showId: Int, season: Int = 0, episode: Int = 0) =
+            "log_episode/$showId?season=$season&episode=$episode"
     }
 
     data object Search : Route("search")

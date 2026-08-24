@@ -318,11 +318,7 @@ fun ShowDetailScreen(
                                         EpisodeItem(
                                             episode = episode,
                                             isWatched = episode.episodeId in watchedIds,
-                                            onClick = if (episode.episodeId in watchedIds) {
-                                                { onEpisodeClick(showId, episode.seasonNumber, episode.episodeNumber, episode.showName) }
-                                            } else {
-                                                ({})
-                                            },
+                                            onClick = { onEpisodeClick(showId, episode.seasonNumber, episode.episodeNumber, episode.showName) },
                                         )
                                     }
                                 }

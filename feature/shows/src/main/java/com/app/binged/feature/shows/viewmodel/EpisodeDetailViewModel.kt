@@ -12,8 +12,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -34,34 +38,49 @@ class EpisodeDetailViewModel @Inject constructor(
     private val episode: Int = savedStateHandle["episode"] ?: 0
     private val showName: String = savedStateHandle["showName"] ?: ""
 
-    private val _episodeDetail = MutableStateFlow<Result<Episode>>(Result.Loading)
-    val episodeDetail: StateFlow<Result<Episode>> = _episodeDetail
-
     private val _events = MutableSharedFlow<EpisodeDetailEvent>()
     val events: SharedFlow<EpisodeDetailEvent> = _events.asSharedFlow()
 
+    private val remoteEpisode = MutableStateFlow<Result<Episode>>(Result.Loading)
+    private val localEntry = MutableStateFlow<Episode?>(null)
+
+    val isLogged: StateFlow<Boolean> = localEntry
+        .map { it != null }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val episodeDetail: StateFlow<Result<Episode>> =
+        combine(remoteEpisode, localEntry) { remote, local ->
+            when (remote) {
+                is Result.Success -> Result.Success(
+                    remote.data.copy(showName = showName, notes = local?.notes.orEmpty())
+                )
+                else -> remote
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Result.Loading)
+
     init {
         loadEpisodeDetails()
+        observeLocalEntry()
     }
 
     private fun loadEpisodeDetails() {
         viewModelScope.launch {
-            _episodeDetail.value = Result.Loading
-            val result = getEpisodeDetailsUseCase(showId, season, episode)
-            if (result is Result.Success) {
-                val localEpisode = episodeRepository.getLocalEpisode(showId, season, episode)
-                val notes = localEpisode?.notes ?: ""
-                val merged = result.data.copy(showName = showName, notes = notes)
-                _episodeDetail.value = Result.Success(merged)
-            } else {
-                _episodeDetail.value = result
+            remoteEpisode.value = Result.Loading
+            remoteEpisode.value = getEpisodeDetailsUseCase(showId, season, episode)
+        }
+    }
+
+    private fun observeLocalEntry() {
+        viewModelScope.launch {
+            episodeRepository.observeLocalEpisode(showId, season, episode).collect { local ->
+                localEntry.value = local
             }
         }
     }
 
     fun deleteEpisode() {
         viewModelScope.launch {
-            val detail = _episodeDetail.value
+            val detail = episodeDetail.value
             if (detail is Result.Success) {
                 deleteEpisodeUseCase(detail.data)
                 _events.emit(EpisodeDetailEvent.Deleted)
@@ -71,14 +90,9 @@ class EpisodeDetailViewModel @Inject constructor(
 
     fun saveNotes(notes: String) {
         viewModelScope.launch {
-            val detail = _episodeDetail.value
-            if (detail is Result.Success) {
-                val localEpisode = episodeRepository.getLocalEpisode(showId, season, episode)
-                val episodeToSave = localEpisode?.copy(notes = notes)
-                    ?: detail.data.copy(notes = notes)
-                episodeRepository.saveEpisode(episodeToSave)
-                _episodeDetail.value = Result.Success(detail.data.copy(notes = notes))
-            }
+            val episodeToSave = localEntry.value?.copy(notes = notes)
+                ?: (remoteEpisode.value as? Result.Success)?.data?.copy(notes = notes)
+            episodeToSave?.let { episodeRepository.saveEpisode(it) }
         }
     }
 }

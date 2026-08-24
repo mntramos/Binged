@@ -42,6 +42,10 @@ class EpisodeRepositoryImpl @Inject constructor(
         return episodeDao.getLocalEpisode(showId, seasonNumber, episodeNumber)?.toDomain()
     }
 
+    override fun observeLocalEpisode(showId: Int, seasonNumber: Int, episodeNumber: Int): Flow<Episode?> {
+        return episodeDao.observeLocalEpisode(showId, seasonNumber, episodeNumber).map { it?.toDomain() }
+    }
+
     override suspend fun saveEpisode(episode: Episode): Long {
         val entity = episode.toEntity()
         val id = episodeDao.insertEpisode(entity)

@@ -19,6 +19,9 @@ interface EpisodeDao {
     @Query("SELECT * FROM episodes WHERE showId = :showId AND seasonNumber = :seasonNumber AND episodeNumber = :episodeNumber LIMIT 1")
     suspend fun getLocalEpisode(showId: Int, seasonNumber: Int, episodeNumber: Int): EpisodeEntity?
 
+    @Query("SELECT * FROM episodes WHERE showId = :showId AND seasonNumber = :seasonNumber AND episodeNumber = :episodeNumber LIMIT 1")
+    fun observeLocalEpisode(showId: Int, seasonNumber: Int, episodeNumber: Int): Flow<EpisodeEntity?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEpisode(episode: EpisodeEntity): Long
 

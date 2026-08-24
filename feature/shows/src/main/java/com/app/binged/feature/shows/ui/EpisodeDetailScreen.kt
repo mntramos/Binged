@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
@@ -57,9 +58,11 @@ import java.util.Locale
 fun EpisodeDetailScreen(
     onBack: () -> Unit,
     onShowClick: (Int) -> Unit = {},
+    onLogEpisodeClick: () -> Unit = {},
     viewModel: EpisodeDetailViewModel = hiltViewModel()
 ) {
     val episodeState by viewModel.episodeDetail.collectAsState()
+    val isLogged by viewModel.isLogged.collectAsState()
     var menuExpanded by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showDeleteNoteDialog by remember { mutableStateOf(false) }
@@ -184,43 +187,59 @@ fun EpisodeDetailScreen(
                             expanded = menuExpanded,
                             onDismissRequest = { menuExpanded = false }
                         ) {
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        if (episodeState is Result.Success &&
-                                            !(episodeState as Result.Success).data.notes.isNullOrEmpty()
-                                        ) "Edit Note" else "Add Note"
-                                    )
-                                },
-                                onClick = {
-                                    menuExpanded = false
-                                    if (episodeState is Result.Success) {
-                                        val existing = (episodeState as Result.Success).data.notes.orEmpty()
-                                        noteText = existing
-                                        hadExistingNote = existing.isNotEmpty()
+                            if (!isLogged) {
+                                DropdownMenuItem(
+                                    text = { Text("Log Episode") },
+                                    onClick = {
+                                        menuExpanded = false
+                                        onLogEpisodeClick()
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = null
+                                        )
                                     }
-                                    showNoteDialog = true
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = null
-                                    )
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Delete") },
-                                onClick = {
-                                    menuExpanded = false
-                                    showDeleteDialog = true
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = null
-                                    )
-                                }
-                            )
+                                )
+                            } else {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            if (episodeState is Result.Success &&
+                                                !(episodeState as Result.Success).data.notes.isNullOrEmpty()
+                                            ) "Edit Note" else "Add Note"
+                                        )
+                                    },
+                                    onClick = {
+                                        menuExpanded = false
+                                        if (episodeState is Result.Success) {
+                                            val existing = (episodeState as Result.Success).data.notes.orEmpty()
+                                            noteText = existing
+                                            hadExistingNote = existing.isNotEmpty()
+                                        }
+                                        showNoteDialog = true
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = null
+                                        )
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Delete") },
+                                    onClick = {
+                                        menuExpanded = false
+                                        showDeleteDialog = true
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = null
+                                        )
+                                    }
+                                )
+                            }
                         }
                     }
                 }
