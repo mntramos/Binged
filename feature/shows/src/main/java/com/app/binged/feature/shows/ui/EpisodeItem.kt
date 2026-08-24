@@ -10,6 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +26,7 @@ import com.app.binged.domain.model.Episode
 @Composable
 fun EpisodeItem(
     episode: Episode,
+    isWatched: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -50,7 +55,21 @@ fun EpisodeItem(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSecondaryContainer
             )
-            Text(text = episode.title, fontWeight = FontWeight.Bold, maxLines = 2)
+            Text(
+                text = episode.title,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                imageVector = if (isWatched) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                contentDescription = if (isWatched) "Watched" else "Not watched",
+                tint = if (isWatched) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                }
+            )
         }
     }
 }

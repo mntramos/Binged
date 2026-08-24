@@ -2,6 +2,7 @@ package com.app.binged.data.api
 
 import com.app.binged.data.model.TmdbEpisodeResponse
 import com.app.binged.data.model.TmdbSearchResponse
+import com.app.binged.data.model.TmdbSeasonResponse
 import com.app.binged.data.model.TmdbShowResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -20,6 +21,12 @@ interface TmdbService {
         @Path("season") season: Int,
         @Path("episode") episode: Int,
     ): TmdbEpisodeResponse
+
+    @GET("tv/{id}/season/{season}")
+    suspend fun getSeasonEpisodes(
+        @Path("id") id: Int,
+        @Path("season") season: Int,
+    ): TmdbSeasonResponse
 
     @GET("search/tv")
     suspend fun searchShows(

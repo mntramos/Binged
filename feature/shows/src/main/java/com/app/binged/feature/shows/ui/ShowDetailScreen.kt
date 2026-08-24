@@ -88,6 +88,7 @@ fun ShowDetailScreen(
 
     val showState by viewModel.showDetails.collectAsState()
     val episodes by viewModel.episodes.collectAsState()
+    val catalog by viewModel.catalog.collectAsState()
     val isTracked by viewModel.isTracked.collectAsState()
     val isWatching by viewModel.isWatching.collectAsState()
     val isFavorite by viewModel.isFavorite.collectAsState()
@@ -271,15 +272,24 @@ fun ShowDetailScreen(
                             ExpandableText(text = show.overview)
                         }
 
-                        if (isTracked && episodes.isNotEmpty()) {
+                        val watchedIds = episodes.map { it.episodeId }.toSet()
+                        val displayEpisodes = if (catalog.isNotEmpty()) {
+                            val catalogIds = catalog.map { it.episodeId }.toSet()
+                            (catalog + episodes.filter { it.episodeId !in catalogIds })
+                                .sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber }))
+                        } else {
+                            episodes.distinctBy { it.episodeId }
+                                .sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber }))
+                        }
+
+                        if (isTracked && displayEpisodes.isNotEmpty()) {
                             Text(
-                                text = "Watched Episodes",
+                                text = "Episodes",
                                 style = MaterialTheme.typography.titleLarge,
                                 modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 8.dp)
                             )
 
-                            episodes.groupBy { it.seasonNumber }.forEach { (season, seasonEpisodes) ->
-                                val seasonEpisodeList = seasonEpisodes.distinctBy { it.episodeId }
+                            displayEpisodes.groupBy { it.seasonNumber }.forEach { (season, seasonEpisodes) ->
                                 val isSeasonExpanded = season !in collapsedSeasons
                                 Row(
                                     modifier = Modifier
@@ -291,7 +301,7 @@ fun ShowDetailScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "Season $season (${seasonEpisodeList.size})",
+                                        text = "Season $season (${seasonEpisodes.count { it.episodeId in watchedIds }}/${seasonEpisodes.size})",
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.weight(1f)
@@ -303,10 +313,15 @@ fun ShowDetailScreen(
                                     )
                                 }
                                 if (isSeasonExpanded) {
-                                    seasonEpisodeList.forEach { episode ->
+                                    seasonEpisodes.forEach { episode ->
                                         EpisodeItem(
                                             episode = episode,
-                                            onClick = { onEpisodeClick(showId, episode.seasonNumber, episode.episodeNumber, episode.showName) },
+                                            isWatched = episode.episodeId in watchedIds,
+                                            onClick = if (episode.episodeId in watchedIds) {
+                                                { onEpisodeClick(showId, episode.seasonNumber, episode.episodeNumber, episode.showName) }
+                                            } else {
+                                                ({})
+                                            },
                                         )
                                     }
                                 }

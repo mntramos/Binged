@@ -8,6 +8,7 @@ import com.app.binged.data.mapper.toDomain
 import com.app.binged.data.mapper.toEntity
 import com.app.binged.data.sync.SyncManager
 import com.app.binged.domain.contract.ShowRepository
+import com.app.binged.domain.model.Episode
 import com.app.binged.domain.model.PaginatedResult
 import com.app.binged.domain.model.Show
 import kotlinx.coroutines.flow.Flow
@@ -55,6 +56,15 @@ class ShowRepositoryImpl @Inject constructor(
         return try {
             val response = tmdbService.getPopularShows()
             Result.Success(response.results.map { it.toDomain() })
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
+    override suspend fun getSeasonEpisodes(showId: Int, season: Int): Result<List<Episode>> {
+        return try {
+            val response = tmdbService.getSeasonEpisodes(showId, season)
+            Result.Success(response.episodes.map { it.toDomain(showId) })
         } catch (e: Exception) {
             Result.Error(e)
         }
