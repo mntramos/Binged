@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,6 +8,12 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.services)
     alias(libs.plugins.google.crashlytics)
+}
+
+
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
 }
 
 fun calculateVersionCode(versionName: String): Int {
@@ -42,10 +50,12 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("${rootDir}/keystore/binged-keystore.jks")
-            storePassword = "binged123"
-            keyAlias = "binged-key"
-            keyPassword = "binged123"
+            storeFile = rootProject.file(
+                localProperties.getProperty("RELEASE_STORE_FILE") ?: "keystore/binged-keystore.jks"
+            )
+            storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD")
+            keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS")
+            keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD")
         }
     }
 
@@ -59,7 +69,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            if (localProperties.getProperty("RELEASE_STORE_PASSWORD") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {
