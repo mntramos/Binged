@@ -414,7 +414,7 @@ fun ShowDetailScreen(
                             onClick = { onLogEpisodeClick(showId, showName) },
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .padding(bottom = 16.dp).navigationBarsPadding()
+                                .padding(16.dp)
                                 .navigationBarsPadding()
                         ) {
                             Icon(
