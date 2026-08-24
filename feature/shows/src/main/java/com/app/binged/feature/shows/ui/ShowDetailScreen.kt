@@ -2,6 +2,7 @@ package com.app.binged.feature.shows.ui
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +24,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material.icons.filled.Star
@@ -49,6 +52,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -90,6 +94,7 @@ fun ShowDetailScreen(
 
     var showName by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
+    var collapsedSeasons by rememberSaveable { mutableStateOf(setOf<Int>()) }
     val snackbarHostState = remember { SnackbarHostState() }
     var showUntrackDialog by remember { mutableStateOf(false) }
 
@@ -274,17 +279,36 @@ fun ShowDetailScreen(
                             )
 
                             episodes.groupBy { it.seasonNumber }.forEach { (season, seasonEpisodes) ->
-                                Text(
-                                    text = "Season $season",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
-                                )
-                                seasonEpisodes.distinctBy { it.episodeId }.forEach { episode ->
-                                    EpisodeItem(
-                                        episode = episode,
-                                        onClick = { onEpisodeClick(showId, episode.seasonNumber, episode.episodeNumber, episode.showName) },
+                                val seasonEpisodeList = seasonEpisodes.distinctBy { it.episodeId }
+                                val isSeasonExpanded = season !in collapsedSeasons
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            collapsedSeasons = if (isSeasonExpanded) collapsedSeasons + season else collapsedSeasons - season
+                                        }
+                                        .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Season $season (${seasonEpisodeList.size})",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.weight(1f)
                                     )
+                                    Icon(
+                                        imageVector = if (isSeasonExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                                        contentDescription = if (isSeasonExpanded) "Collapse season" else "Expand season",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                if (isSeasonExpanded) {
+                                    seasonEpisodeList.forEach { episode ->
+                                        EpisodeItem(
+                                            episode = episode,
+                                            onClick = { onEpisodeClick(showId, episode.seasonNumber, episode.episodeNumber, episode.showName) },
+                                        )
+                                    }
                                 }
                             }
                         } else if (isTracked) {
