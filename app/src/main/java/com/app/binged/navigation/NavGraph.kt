@@ -157,16 +157,22 @@ fun MainAppNav(
         composable(
             route = Route.LogEpisode.path,
             arguments = listOf(
-                navArgument("showId") { type = NavType.IntType }
+                navArgument("showId") { type = NavType.IntType },
+                navArgument("season") { defaultValue = 0; type = NavType.IntType },
+                navArgument("episode") { defaultValue = 0; type = NavType.IntType }
             )
         ) { backStackEntry ->
             val showId = backStackEntry.arguments?.getInt("showId") ?: 0
+            val season = backStackEntry.arguments?.getInt("season") ?: 0
+            val episode = backStackEntry.arguments?.getInt("episode") ?: 0
             val showName = navController.previousBackStackEntry
                 ?.savedStateHandle
                 ?.get<String>("showName") ?: ""
             LogEpisodeScreen(
                 showId = showId,
                 showName = showName,
+                initialSeason = season,
+                initialEpisode = episode,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -203,7 +209,11 @@ fun MainAppNav(
                 navArgument("episode") { type = NavType.IntType },
                 navArgument("showName") { defaultValue = ""; type = NavType.StringType }
             )
-        ) {
+        ) { backStackEntry ->
+            val showId = backStackEntry.arguments?.getInt("showId") ?: 0
+            val season = backStackEntry.arguments?.getInt("season") ?: 0
+            val episode = backStackEntry.arguments?.getInt("episode") ?: 0
+            val showName = backStackEntry.arguments?.getString("showName") ?: ""
             EpisodeDetailScreen(
                 onBack = { navController.popBackStack() },
                 onShowClick = { showId ->
@@ -211,6 +221,10 @@ fun MainAppNav(
                         popUpTo(Route.EpisodeDetail.path) { inclusive = true }
                         launchSingleTop = true
                     }
+                },
+                onLogEpisodeClick = {
+                    navController.currentBackStackEntry?.savedStateHandle?.set("showName", showName)
+                    navController.navigate(Route.LogEpisode.createRoute(showId, season, episode))
                 }
             )
         }

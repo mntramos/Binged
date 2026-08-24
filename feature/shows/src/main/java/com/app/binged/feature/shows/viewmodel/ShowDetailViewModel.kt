@@ -8,6 +8,7 @@ import com.app.binged.domain.model.Episode
 import com.app.binged.domain.model.Show
 import com.app.binged.domain.usecase.DeleteEpisodeUseCase
 import com.app.binged.domain.usecase.GetEpisodesForShowUseCase
+import com.app.binged.domain.usecase.GetSeasonEpisodesUseCase
 import com.app.binged.domain.usecase.GetShowDetailsUseCase
 import com.app.binged.domain.usecase.GetTrackedShowsUseCase
 import com.app.binged.domain.usecase.LogEpisodeUseCase
@@ -16,6 +17,8 @@ import com.app.binged.domain.usecase.UntrackShowUseCase
 import com.app.binged.domain.usecase.UpdateFavoriteStatusUseCase
 import com.app.binged.domain.usecase.UpdateWatchingStatusUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -29,6 +32,7 @@ import javax.inject.Inject
 class ShowDetailViewModel @Inject constructor(
     private val getShowDetailsUseCase: GetShowDetailsUseCase,
     private val getEpisodesForShowUseCase: GetEpisodesForShowUseCase,
+    private val getSeasonEpisodesUseCase: GetSeasonEpisodesUseCase,
     private val trackShowUseCase: TrackShowUseCase,
     private val untrackShowUseCase: UntrackShowUseCase,
     private val deleteEpisodeUseCase: DeleteEpisodeUseCase,
@@ -46,6 +50,14 @@ class ShowDetailViewModel @Inject constructor(
 
     private val _episodes = MutableStateFlow<List<Episode>>(emptyList())
     val episodes: StateFlow<List<Episode>> = _episodes
+
+    private val _catalog = MutableStateFlow<List<Episode>>(emptyList())
+    val catalog: StateFlow<List<Episode>> = _catalog
+
+    private val _isCatalogLoading = MutableStateFlow(false)
+    val isCatalogLoading: StateFlow<Boolean> = _isCatalogLoading
+
+    private var isFetchingCatalog = false
 
     private val _isTracked = MutableStateFlow(false)
     val isTracked: StateFlow<Boolean> = _isTracked
@@ -97,7 +109,22 @@ class ShowDetailViewModel @Inject constructor(
                 _isTracked.value = tracked != null
                 _isWatching.value = tracked?.isWatching ?: false
                 _isFavorite.value = tracked?.isFavorite ?: false
+                if (tracked != null && _catalog.value.isEmpty() && !isFetchingCatalog) {
+                    isFetchingCatalog = true
+                    _isCatalogLoading.value = true
+                    fetchEpisodeCatalog(show)
+                }
             }
+        }
+    }
+
+    private fun fetchEpisodeCatalog(show: Show) {
+        viewModelScope.launch {
+            val results = (1..show.seasonCount.coerceAtLeast(1)).map { season ->
+                async { getSeasonEpisodesUseCase(show.id, season) }
+            }.awaitAll()
+            _catalog.value = results.filterIsInstance<Result.Success<List<Episode>>>().flatMap { it.data }
+            _isCatalogLoading.value = false
         }
     }
 

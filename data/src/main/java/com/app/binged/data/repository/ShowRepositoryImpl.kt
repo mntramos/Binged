@@ -1,5 +1,6 @@
 package com.app.binged.data.repository
 
+import com.app.binged.core.utils.NetworkMonitor
 import com.app.binged.core.utils.Result
 import com.app.binged.data.api.TmdbService
 import com.app.binged.data.database.dao.EpisodeDao
@@ -8,6 +9,7 @@ import com.app.binged.data.mapper.toDomain
 import com.app.binged.data.mapper.toEntity
 import com.app.binged.data.sync.SyncManager
 import com.app.binged.domain.contract.ShowRepository
+import com.app.binged.domain.model.Episode
 import com.app.binged.domain.model.PaginatedResult
 import com.app.binged.domain.model.Show
 import kotlinx.coroutines.flow.Flow
@@ -18,7 +20,8 @@ class ShowRepositoryImpl @Inject constructor(
     private val showDao: ShowDao,
     private val episodeDao: EpisodeDao,
     private val tmdbService: TmdbService,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val networkMonitor: NetworkMonitor
 ) : ShowRepository {
 
     override fun getTrackedShows(): Flow<List<Show>> {
@@ -43,18 +46,34 @@ class ShowRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getShowDetails(id: Int): Result<Show> {
+        if (networkMonitor.isOnline.first() == false) {
+            getLocalShow(id)?.let { return it }
+        }
         return try {
             val response = tmdbService.getShowDetails(id)
             Result.Success(response.toDomain())
         } catch (e: Exception) {
-            Result.Error(e)
+            getLocalShow(id) ?: Result.Error(e)
         }
+    }
+
+    private suspend fun getLocalShow(id: Int): Result<Show>? {
+        return showDao.getShowById(id).first()?.let { Result.Success(it.toDomain()) }
     }
 
     override suspend fun getPopularShows(): Result<List<Show>> {
         return try {
             val response = tmdbService.getPopularShows()
             Result.Success(response.results.map { it.toDomain() })
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
+    override suspend fun getSeasonEpisodes(showId: Int, season: Int): Result<List<Episode>> {
+        return try {
+            val response = tmdbService.getSeasonEpisodes(showId, season)
+            Result.Success(response.episodes.map { it.toDomain(showId) })
         } catch (e: Exception) {
             Result.Error(e)
         }
