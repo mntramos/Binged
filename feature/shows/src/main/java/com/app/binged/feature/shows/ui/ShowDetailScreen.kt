@@ -89,6 +89,7 @@ fun ShowDetailScreen(
     val showState by viewModel.showDetails.collectAsState()
     val episodes by viewModel.episodes.collectAsState()
     val catalog by viewModel.catalog.collectAsState()
+    val isCatalogLoading by viewModel.isCatalogLoading.collectAsState()
     val isTracked by viewModel.isTracked.collectAsState()
     val isWatching by viewModel.isWatching.collectAsState()
     val isFavorite by viewModel.isFavorite.collectAsState()
@@ -327,12 +328,23 @@ fun ShowDetailScreen(
                                 }
                             }
                         } else if (isTracked) {
-                            Text(
-                                text = "You haven't logged any episodes yet.",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 16.dp)
-                            )
+                            if (isCatalogLoading) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 32.dp)
+                                ) {
+                                    CircularProgressIndicator()
+                                }
+                            } else {
+                                Text(
+                                    text = "Couldn't load episodes.",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 16.dp)
+                                )
+                            }
                         } else {
                             Text(
                                 text = "Track this show to start logging episodes.",

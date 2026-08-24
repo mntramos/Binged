@@ -54,6 +54,9 @@ class ShowDetailViewModel @Inject constructor(
     private val _catalog = MutableStateFlow<List<Episode>>(emptyList())
     val catalog: StateFlow<List<Episode>> = _catalog
 
+    private val _isCatalogLoading = MutableStateFlow(false)
+    val isCatalogLoading: StateFlow<Boolean> = _isCatalogLoading
+
     private var isFetchingCatalog = false
 
     private val _isTracked = MutableStateFlow(false)
@@ -108,6 +111,7 @@ class ShowDetailViewModel @Inject constructor(
                 _isFavorite.value = tracked?.isFavorite ?: false
                 if (tracked != null && _catalog.value.isEmpty() && !isFetchingCatalog) {
                     isFetchingCatalog = true
+                    _isCatalogLoading.value = true
                     fetchEpisodeCatalog(show)
                 }
             }
@@ -120,6 +124,7 @@ class ShowDetailViewModel @Inject constructor(
                 async { getSeasonEpisodesUseCase(show.id, season) }
             }.awaitAll()
             _catalog.value = results.filterIsInstance<Result.Success<List<Episode>>>().flatMap { it.data }
+            _isCatalogLoading.value = false
         }
     }
 
