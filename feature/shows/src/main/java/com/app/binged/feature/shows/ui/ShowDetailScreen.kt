@@ -340,7 +340,7 @@ fun ShowDetailScreen(
                                         text = if (catalog.isEmpty()) {
                                             "Season $season"
                                         } else {
-                                            "Season $season (${seasonEpisodes.count { it.episodeId in watchedIds }}/${seasonEpisodes.size})"
+                                            "Season $season (${seasonEpisodes.count { it.episodeId in watchedIds || it.getIdentifier() in seenEpisodes }}/${seasonEpisodes.size})"
                                         },
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.primary,
