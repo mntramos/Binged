@@ -71,9 +71,8 @@ class SyncManager @Inject constructor(
                                 database.episodeDao().insertEpisode(entity)
                             }
                             DocumentChange.Type.REMOVED -> {
-                                val showId = change.document.getLong("showId")?.toInt() ?: return@launch
-                                val episodeId = change.document.getLong("episodeId")?.toInt() ?: return@launch
-                                database.episodeDao().deleteEpisodeById(episodeId, showId)
+                                val rowId = change.document.id.toLongOrNull() ?: return@launch
+                                database.episodeDao().deleteEpisodeByRowId(rowId)
                             }
                         }
                     }
@@ -145,20 +144,15 @@ class SyncManager @Inject constructor(
         }
     }
 
-    fun deleteEpisode(episodeId: Int, showId: Int) {
+    fun deleteEpisode(id: Long) {
         val user = uid ?: return
         scope.launch {
             try {
-                val episodesRef = firestore.collection("users").document(user)
+                firestore.collection("users").document(user)
                     .collection("watchedEpisodes")
-                val snapshot = episodesRef.whereEqualTo("episodeId", episodeId.toLong())
-                    .whereEqualTo("showId", showId.toLong())
-                    .get()
-                    .await()
-                for (doc in snapshot.documents) {
-                    doc.reference.delete()
-                }
-            } catch (e: Exception) { Log.e(TAG, "deleteEpisode failed for episodeId=$episodeId showId=$showId", e) }
+                    .document(id.toString())
+                    .delete()
+            } catch (e: Exception) { Log.e(TAG, "deleteEpisode failed for id=$id", e) }
         }
     }
 

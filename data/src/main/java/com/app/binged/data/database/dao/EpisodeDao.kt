@@ -28,8 +28,8 @@ interface EpisodeDao {
     @Delete
     suspend fun deleteEpisode(episode: EpisodeEntity)
 
-    @Query("DELETE FROM episodes WHERE episodeId = :episodeId AND showId = :showId")
-    suspend fun deleteEpisodeById(episodeId: Int, showId: Int)
+    @Query("DELETE FROM episodes WHERE id = :id")
+    suspend fun deleteEpisodeByRowId(id: Long)
 
     @Query("DELETE FROM episodes WHERE showId = :showId")
     suspend fun deleteEpisodesByShow(showId: Int)

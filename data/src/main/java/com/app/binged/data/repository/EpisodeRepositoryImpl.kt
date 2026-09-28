@@ -65,8 +65,8 @@ class EpisodeRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteEpisode(episode: Episode) {
-        episodeDao.deleteEpisodeById(episode.episodeId, episode.showId)
-        syncManager.deleteEpisode(episode.episodeId, episode.showId)
+        episodeDao.deleteEpisodeByRowId(episode.id)
+        syncManager.deleteEpisode(episode.id)
     }
 
     override suspend fun deleteAll() {

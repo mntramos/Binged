@@ -80,11 +80,9 @@ class EpisodeDetailViewModel @Inject constructor(
 
     fun deleteEpisode() {
         viewModelScope.launch {
-            val detail = episodeDetail.value
-            if (detail is Result.Success) {
-                deleteEpisodeUseCase(detail.data)
-                _events.emit(EpisodeDetailEvent.Deleted)
-            }
+            val local = localEntry.value ?: return@launch
+            deleteEpisodeUseCase(local)
+            _events.emit(EpisodeDetailEvent.Deleted)
         }
     }
 
