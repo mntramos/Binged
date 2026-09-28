@@ -18,18 +18,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -52,13 +55,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontStyle
@@ -69,6 +72,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.app.binged.core.utils.Result
 import com.app.binged.core.utils.UiEvent
+import com.app.binged.domain.model.Episode
 import com.app.binged.feature.shows.viewmodel.ShowDetailViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -93,12 +97,43 @@ fun ShowDetailScreen(
     val isTracked by viewModel.isTracked.collectAsState()
     val isWatching by viewModel.isWatching.collectAsState()
     val isFavorite by viewModel.isFavorite.collectAsState()
+    val seenEpisodes by viewModel.seenEpisodes.collectAsState()
 
     var showName by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
-    var collapsedSeasons by rememberSaveable { mutableStateOf(setOf<Int>()) }
+    val collapsedSeasons by viewModel.collapsedSeasons.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var showUntrackDialog by remember { mutableStateOf(false) }
+    var pendingSeasonToggle by remember { mutableStateOf<Pair<Int, Boolean>?>(null) }
+
+    pendingSeasonToggle?.let { (season, markAll) ->
+        AlertDialog(
+            onDismissRequest = { pendingSeasonToggle = null },
+            title = { Text(if (markAll) "Mark season as seen" else "Clear season") },
+            text = {
+                Text(
+                    if (markAll) {
+                        "Mark all episodes in season $season as seen? No diary entries will be created."
+                    } else {
+                        "Clear the seen mark for all episodes in season $season? Logged episodes stay logged."
+                    }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.setSeasonSeen(season, markAll)
+                    pendingSeasonToggle = null
+                }) {
+                    Text(if (markAll) "Mark seen" else "Clear")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingSeasonToggle = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     val scrollState = rememberScrollState()
 
@@ -296,7 +331,7 @@ fun ShowDetailScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
-                                            collapsedSeasons = if (isSeasonExpanded) collapsedSeasons + season else collapsedSeasons - season
+                                            viewModel.toggleSeasonCollapsed(season)
                                         }
                                         .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
                                     verticalAlignment = Alignment.CenterVertically
@@ -311,6 +346,40 @@ fun ShowDetailScreen(
                                         color = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.weight(1f)
                                     )
+                                    // Bulk seen toggle. Only shown once the
+                                    // catalog knows the full season, otherwise
+                                    // "check all" would silently skip
+                                    // episodes that have not been fetched.
+                                    if (catalog.isNotEmpty()) {
+                                        val seasonSeenCount = seasonEpisodes.count {
+                                            it.getIdentifier() in seenEpisodes || it.episodeId in watchedIds
+                                        }
+                                        // Only a fully watched season reads as
+                                        // seen; a partial one stays outlined.
+                                        val allSeen = seasonSeenCount == seasonEpisodes.size
+                                        Icon(
+                                            imageVector = if (allSeen) {
+                                                Icons.Filled.CheckCircle
+                                            } else {
+                                                Icons.Outlined.CheckCircle
+                                            },
+                                            contentDescription = if (allSeen) {
+                                                "Clear seen for season $season"
+                                            } else {
+                                                "Mark all of season $season as seen"
+                                            },
+                                            tint = if (allSeen) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                                            },
+                                            modifier = Modifier
+                                                .clip(CircleShape)
+                                                .clickable(enabled = !allSeen || hasUnloggedInSeason(seasonEpisodes, watchedIds)) {
+                                                    pendingSeasonToggle = season to !allSeen
+                                                }
+                                        )
+                                    }
                                     Icon(
                                         imageVector = if (isSeasonExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
                                         contentDescription = if (isSeasonExpanded) "Collapse season" else "Expand season",
@@ -321,7 +390,11 @@ fun ShowDetailScreen(
                                     seasonEpisodes.forEach { episode ->
                                         EpisodeItem(
                                             episode = episode,
-                                            isWatched = episode.episodeId in watchedIds,
+                                            isSeen = episode.getIdentifier() in seenEpisodes,
+                                            isLogged = episode.episodeId in watchedIds,
+                                            onToggleSeen = {
+                                                viewModel.toggleSeen(episode.seasonNumber, episode.episodeNumber)
+                                            },
                                             onClick = { onEpisodeClick(showId, episode.seasonNumber, episode.episodeNumber, episode.showName) },
                                         )
                                     }
@@ -485,3 +558,13 @@ fun ShowDetailScreen(
         )
     }
 }
+
+/**
+ * Clearing a season is only meaningful while at least one episode in it has no
+ * diary entry: logged episodes stay logged, so their seen mark is derived from
+ * the log and cannot be cleared.
+ */
+private fun hasUnloggedInSeason(
+    seasonEpisodes: List<Episode>,
+    watchedIds: Set<Int>
+): Boolean = seasonEpisodes.any { it.episodeId !in watchedIds }

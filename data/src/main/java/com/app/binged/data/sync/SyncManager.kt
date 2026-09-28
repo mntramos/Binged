@@ -11,6 +11,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -46,8 +47,7 @@ class SyncManager @Inject constructor(
                         when (change.type) {
                             DocumentChange.Type.ADDED,
                             DocumentChange.Type.MODIFIED -> {
-                                val entity = change.document.toShowEntity() ?: return@launch
-                                database.showDao().insertShow(entity)
+                                upsertFromRemote(change.document)
                             }
                             DocumentChange.Type.REMOVED -> {
                                 val id = change.document.getLong("id")?.toInt() ?: return@launch
@@ -86,6 +86,31 @@ class SyncManager @Inject constructor(
         listeners.clear()
     }
 
+    /**
+     * Writes a remote show document into Room without clobbering local-only state.
+     *
+     * A document written by an older build simply has no `seenEpisodes` / `collapsedSeasons`
+     * field. Blindly inserting the mapped entity would REPLACE the whole row and reset those
+     * fields to their empty defaults, so any local value the push never delivered is lost.
+     * Missing fields are therefore carried over from the existing local row instead.
+     */
+    private suspend fun upsertFromRemote(doc: DocumentSnapshot) {
+        val remote = doc.toShowEntity() ?: return
+        val hasSeen = doc.contains("seenEpisodes")
+        val hasCollapsed = doc.contains("collapsedSeasons")
+        if (hasSeen && hasCollapsed) {
+            database.showDao().insertShow(remote)
+            return
+        }
+        val local = database.showDao().getShowById(remote.id).first()
+        database.showDao().insertShow(
+            remote.copy(
+                seenEpisodes = if (hasSeen) remote.seenEpisodes else local?.seenEpisodes.orEmpty(),
+                collapsedSeasons = if (hasCollapsed) remote.collapsedSeasons else local?.collapsedSeasons.orEmpty()
+            )
+        )
+    }
+
     suspend fun pullAll() {
         val user = uid ?: return
         val showsRef = firestore.collection("users").document(user).collection("trackedShows")
@@ -94,8 +119,7 @@ class SyncManager @Inject constructor(
         try {
             val showsSnapshot = showsRef.get().await()
             for (doc in showsSnapshot.documents) {
-                val entity = doc.toShowEntity() ?: continue
-                database.showDao().insertShow(entity)
+                upsertFromRemote(doc)
             }
         } catch (e: Exception) { Log.e(TAG, "pullAll shows failed", e) }
 
@@ -183,7 +207,9 @@ private fun ShowEntity.toMap(): Map<String, Any?> = mapOf(
     "tagline" to tagline,
     "seasonCount" to seasonCount.toLong(),
     "isFavorite" to isFavorite,
-    "isWatching" to isWatching
+    "isWatching" to isWatching,
+    "seenEpisodes" to seenEpisodes.toList(),
+    "collapsedSeasons" to collapsedSeasons.toList()
 )
 
 private fun EpisodeEntity.toMap(): Map<String, Any?> = mapOf(
@@ -215,7 +241,9 @@ private fun DocumentSnapshot.toShowEntity(): ShowEntity? {
         tagline = getString("tagline") ?: "",
         seasonCount = (getLong("seasonCount") ?: 1L).toInt(),
         isFavorite = getBoolean("isFavorite") ?: false,
-        isWatching = getBoolean("isWatching") ?: false
+        isWatching = getBoolean("isWatching") ?: false,
+        seenEpisodes = (get("seenEpisodes") as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
+        collapsedSeasons = (get("collapsedSeasons") as? List<*>)?.mapNotNull { (it as? Number)?.toInt() }?.toSet() ?: emptySet()
     )
 }
 

@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.app.binged.domain.model.Episode
@@ -26,10 +27,13 @@ import com.app.binged.domain.model.Episode
 @Composable
 fun EpisodeItem(
     episode: Episode,
-    isWatched: Boolean,
+    isSeen: Boolean,
+    isLogged: Boolean,
+    onToggleSeen: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isChecked = isSeen || isLogged
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
@@ -61,14 +65,23 @@ fun EpisodeItem(
                 maxLines = 2,
                 modifier = Modifier.weight(1f)
             )
+            // Logged episodes derive their checkmark from the diary entry, so
+            // the toggle is disabled: seen state follows the log, not the tap.
             Icon(
-                imageVector = if (isWatched) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                contentDescription = if (isWatched) "Watched" else "Not watched",
-                tint = if (isWatched) {
+                imageVector = if (isChecked) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                contentDescription = when {
+                    isLogged -> "Logged"
+                    isChecked -> "Seen"
+                    else -> "Not seen"
+                },
+                tint = if (isChecked) {
                     MaterialTheme.colorScheme.primary
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-                }
+                },
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .clickable(enabled = !isLogged, onClick = onToggleSeen)
             )
         }
     }

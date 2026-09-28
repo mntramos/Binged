@@ -8,6 +8,7 @@ import com.app.binged.domain.contract.EpisodeRepository
 import com.app.binged.domain.model.Episode
 import com.app.binged.domain.usecase.DeleteEpisodeUseCase
 import com.app.binged.domain.usecase.GetEpisodeDetailsUseCase
+import com.app.binged.domain.usecase.UpdateSeenEpisodesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +31,7 @@ sealed interface EpisodeDetailEvent {
 class EpisodeDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getEpisodeDetailsUseCase: GetEpisodeDetailsUseCase,
+    private val updateSeenEpisodesUseCase: UpdateSeenEpisodesUseCase,
     private val episodeRepository: EpisodeRepository,
     private val deleteEpisodeUseCase: DeleteEpisodeUseCase
 ) : ViewModel() {
@@ -102,6 +104,13 @@ class EpisodeDetailViewModel @Inject constructor(
             val isLastEntry = _entries.value.size == 1
             deleteEpisodeUseCase(entry)
             if (isLastEntry) {
+                // No diary entry remains for this episode, so it is no longer
+                // "seen" either.
+                updateSeenEpisodesUseCase(
+                    showId,
+                    setOf(Episode.identifierOf(season, episode)),
+                    UpdateSeenEpisodesUseCase.Mode.REMOVE
+                )
                 _events.emit(EpisodeDetailEvent.Deleted)
             }
         }

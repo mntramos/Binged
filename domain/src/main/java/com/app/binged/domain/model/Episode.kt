@@ -20,9 +20,13 @@ data class Episode(
     val isRewatch: Boolean = false,
     val rating: Int? = null
 ) {
-    fun getIdentifier(): String {
-        val season = seasonNumber.toString().padStart(2, '0')
-        val episode = episodeNumber.toString().padStart(2, '0')
-        return "S${season}E${episode}"
+    fun getIdentifier(): String = identifierOf(seasonNumber, episodeNumber)
+
+    companion object {
+        fun identifierOf(seasonNumber: Int, episodeNumber: Int): String {
+            val season = seasonNumber.toString().padStart(2, '0')
+            val episode = episodeNumber.toString().padStart(2, '0')
+            return "S${season}E${episode}"
+        }
     }
 }

@@ -108,6 +108,36 @@ class ShowRepositoryImpl @Inject constructor(
         return result
     }
 
+    private suspend fun persistSeen(showId: Int, seen: Set<String>) {
+        val entity = showDao.getShowById(showId).first() ?: return
+        val updated = entity.copy(seenEpisodes = seen.toList())
+        showDao.insertShow(updated)
+        syncManager.pushShow(updated)
+    }
+
+    override suspend fun setCollapsedSeasons(showId: Int, collapsed: Set<Int>) {
+        val entity = showDao.getShowById(showId).first() ?: return
+        val updated = entity.copy(collapsedSeasons = collapsed)
+        showDao.insertShow(updated)
+        syncManager.pushShow(updated)
+    }
+
+    override suspend fun setSeenEpisodes(showId: Int, seen: Set<String>) {
+        persistSeen(showId, seen)
+    }
+
+    override suspend fun addSeenEpisodes(showId: Int, seen: Set<String>) {
+        if (seen.isEmpty()) return
+        val current = showDao.getShowById(showId).first()?.seenEpisodes.orEmpty().toMutableSet()
+        persistSeen(showId, current + seen)
+    }
+
+    override suspend fun removeSeenEpisodes(showId: Int, seen: Set<String>) {
+        if (seen.isEmpty()) return
+        val current = showDao.getShowById(showId).first()?.seenEpisodes.orEmpty().toMutableSet()
+        persistSeen(showId, current - seen)
+    }
+
     override suspend fun deleteAll() {
         showDao.deleteAll()
     }

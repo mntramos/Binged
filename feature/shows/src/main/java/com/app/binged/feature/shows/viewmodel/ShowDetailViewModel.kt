@@ -14,7 +14,9 @@ import com.app.binged.domain.usecase.GetTrackedShowsUseCase
 import com.app.binged.domain.usecase.LogEpisodeUseCase
 import com.app.binged.domain.usecase.TrackShowUseCase
 import com.app.binged.domain.usecase.UntrackShowUseCase
+import com.app.binged.domain.usecase.UpdateCollapsedSeasonsUseCase
 import com.app.binged.domain.usecase.UpdateFavoriteStatusUseCase
+import com.app.binged.domain.usecase.UpdateSeenEpisodesUseCase
 import com.app.binged.domain.usecase.UpdateWatchingStatusUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
@@ -24,6 +26,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -39,6 +42,8 @@ class ShowDetailViewModel @Inject constructor(
     private val logEpisodeUseCase: LogEpisodeUseCase,
     private val updateFavoriteStatusUseCase: UpdateFavoriteStatusUseCase,
     private val updateWatchingStatusUseCase: UpdateWatchingStatusUseCase,
+    private val updateSeenEpisodesUseCase: UpdateSeenEpisodesUseCase,
+    private val updateCollapsedSeasonsUseCase: UpdateCollapsedSeasonsUseCase,
     getTrackedShowsUseCase: GetTrackedShowsUseCase
 ) : ViewModel() {
 
@@ -53,6 +58,12 @@ class ShowDetailViewModel @Inject constructor(
 
     private val _catalog = MutableStateFlow<List<Episode>>(emptyList())
     val catalog: StateFlow<List<Episode>> = _catalog
+
+    private val _seenEpisodes = MutableStateFlow<Set<String>>(emptySet())
+    val seenEpisodes: StateFlow<Set<String>> = _seenEpisodes.asStateFlow()
+
+    private val _collapsedSeasons = MutableStateFlow<Set<Int>>(emptySet())
+    val collapsedSeasons: StateFlow<Set<Int>> = _collapsedSeasons.asStateFlow()
 
     private val _isCatalogLoading = MutableStateFlow(false)
     val isCatalogLoading: StateFlow<Boolean> = _isCatalogLoading
@@ -109,6 +120,8 @@ class ShowDetailViewModel @Inject constructor(
                 _isTracked.value = tracked != null
                 _isWatching.value = tracked?.isWatching ?: false
                 _isFavorite.value = tracked?.isFavorite ?: false
+                _seenEpisodes.value = tracked?.seenEpisodes?.toSet() ?: emptySet()
+                _collapsedSeasons.value = tracked?.collapsedSeasons ?: emptySet()
                 if (tracked != null && _catalog.value.isEmpty() && !isFetchingCatalog) {
                     isFetchingCatalog = true
                     _isCatalogLoading.value = true
@@ -182,6 +195,64 @@ class ShowDetailViewModel @Inject constructor(
             _uiEvent.emit(UiEvent.ShowSnackbar(msg))
         }
     }
+
+    fun toggleSeen(seasonNumber: Int, episodeNumber: Int) {
+        viewModelScope.launch {
+            if (isLogged(seasonNumber, episodeNumber)) return@launch
+            val identifier = Episode.identifierOf(seasonNumber, episodeNumber)
+            val current = _seenEpisodes.value
+            val next = if (identifier in current) current - identifier else current + identifier
+            persistSeen(next)
+        }
+    }
+
+    fun setSeasonSeen(seasonNumber: Int, seen: Boolean) {
+        viewModelScope.launch {
+            val current = _seenEpisodes.value
+            val seasonIds = seasonIdentifiers(seasonNumber)
+            if (seasonIds.isEmpty()) return@launch
+            val next = if (seen) current + seasonIds else {
+                val logged = loggedIdentifiers(seasonNumber)
+                current - seasonIds + logged
+            }
+            persistSeen(next)
+        }
+    }
+
+    fun toggleSeasonCollapsed(seasonNumber: Int) {
+        val next = _collapsedSeasons.value.let {
+            if (seasonNumber in it) it - seasonNumber else it + seasonNumber
+        }
+        _collapsedSeasons.value = next
+        viewModelScope.launch {
+            updateCollapsedSeasonsUseCase(currentShowId, next)
+        }
+    }
+
+    fun isSeen(seasonNumber: Int, episodeNumber: Int): Boolean =
+        Episode.identifierOf(seasonNumber, episodeNumber) in _seenEpisodes.value
+
+    fun isLogged(seasonNumber: Int, episodeNumber: Int): Boolean =
+        _episodes.value.any { it.seasonNumber == seasonNumber && it.episodeNumber == episodeNumber }
+
+    private fun persistSeen(next: Set<String>) {
+        _seenEpisodes.value = next
+        viewModelScope.launch {
+            updateSeenEpisodesUseCase(currentShowId, next, UpdateSeenEpisodesUseCase.Mode.SET)
+        }
+    }
+
+    private fun seasonIdentifiers(seasonNumber: Int): Set<String> {
+        val catalogIds = _catalog.value.map { it.episodeId }.toSet()
+        val fromCatalog = _catalog.value.filter { it.seasonNumber == seasonNumber }
+        val localOnly = _episodes.value.filter {
+            it.seasonNumber == seasonNumber && it.episodeId !in catalogIds
+        }
+        return (fromCatalog + localOnly).map { it.getIdentifier() }.toSet()
+    }
+
+    private fun loggedIdentifiers(seasonNumber: Int): Set<String> =
+        _episodes.value.filter { it.seasonNumber == seasonNumber }.map { it.getIdentifier() }.toSet()
 
     fun deleteEpisode(episode: Episode) {
         viewModelScope.launch {

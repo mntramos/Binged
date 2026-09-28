@@ -15,5 +15,7 @@ data class ShowEntity(
     val tagline: String = "",
     val seasonCount: Int = 1,
     val isFavorite: Boolean = false,
-    val isWatching: Boolean = false
+    val isWatching: Boolean = false,
+    val seenEpisodes: List<String> = emptyList(),
+    val collapsedSeasons: Set<Int> = emptySet()
 )

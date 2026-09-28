@@ -7,6 +7,7 @@ import com.app.binged.domain.contract.EpisodeRepository
 import com.app.binged.domain.model.Episode
 import com.app.binged.domain.usecase.GetEpisodeDetailsUseCase
 import com.app.binged.domain.usecase.LogEpisodeUseCase
+import com.app.binged.domain.usecase.UpdateSeenEpisodesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -22,6 +23,7 @@ import javax.inject.Inject
 class LogEpisodeViewModel @Inject constructor(
     private val logEpisodeUseCase: LogEpisodeUseCase,
     private val getEpisodeDetailsUseCase: GetEpisodeDetailsUseCase,
+    private val updateSeenEpisodesUseCase: UpdateSeenEpisodesUseCase,
     private val episodeRepository: EpisodeRepository
 ) : ViewModel() {
 
@@ -95,10 +97,22 @@ class LogEpisodeViewModel @Inject constructor(
                         rating = rating
                     )
                     logEpisodeUseCase(episode)
+                    markSeen(seasonNumber, episodeNumber)
                 }
             } catch (e: Exception) {
                 _episodeDetails.value = Result.Error(e)
             }
+        }
+    }
+
+    private fun markSeen(seasonNumber: Int, episodeNumber: Int) {
+        viewModelScope.launch {
+            val identifier = Episode.identifierOf(seasonNumber, episodeNumber)
+            updateSeenEpisodesUseCase(
+                _showId.value ?: return@launch,
+                setOf(identifier),
+                UpdateSeenEpisodesUseCase.Mode.ADD
+            )
         }
     }
 }

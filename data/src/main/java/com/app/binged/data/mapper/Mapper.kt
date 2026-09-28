@@ -34,7 +34,9 @@ fun ShowEntity.toDomain(): Show {
         tagline = tagline,
         seasonCount = seasonCount,
         isFavorite = isFavorite,
-        isWatching = isWatching
+        isWatching = isWatching,
+        seenEpisodes = seenEpisodes,
+        collapsedSeasons = collapsedSeasons
     )
 }
 
@@ -50,7 +52,9 @@ fun Show.toEntity(): ShowEntity {
         tagline = tagline,
         seasonCount = seasonCount,
         isFavorite = isFavorite,
-        isWatching = isWatching
+        isWatching = isWatching,
+        seenEpisodes = seenEpisodes,
+        collapsedSeasons = collapsedSeasons
     )
 }
 

@@ -11,5 +11,7 @@ data class Show(
     val tagline: String,
     val seasonCount: Int,
     val isFavorite: Boolean = false,
-    val isWatching: Boolean = false
+    val isWatching: Boolean = false,
+    val seenEpisodes: List<String> = emptyList(),
+    val collapsedSeasons: Set<Int> = emptySet()
 )
