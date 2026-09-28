@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
@@ -520,15 +521,16 @@ private fun WatchHistoryRow(
                     color = contentColor
                 )
                 if (entry.isRewatch) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Rewatch",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (isSelected) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.Default.RemoveRedEye,
+                        contentDescription = "Rewatch",
+                        tint = if (isSelected) {
                             contentColor
                         } else {
                             MaterialTheme.colorScheme.primary
-                        }
+                        },
+                        modifier = Modifier.size(14.dp)
                     )
                 }
             }
