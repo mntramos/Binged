@@ -52,8 +52,10 @@ class EpisodeRepositoryImpl @Inject constructor(
         return episodeDao.getLocalEpisode(showId, seasonNumber, episodeNumber)?.toDomain()
     }
 
-    override fun observeLocalEpisode(showId: Int, seasonNumber: Int, episodeNumber: Int): Flow<Episode?> {
-        return episodeDao.observeLocalEpisode(showId, seasonNumber, episodeNumber).map { it?.toDomain() }
+    override fun observeEpisodeEntries(showId: Int, seasonNumber: Int, episodeNumber: Int): Flow<List<Episode>> {
+        return episodeDao.observeEpisodeEntries(showId, seasonNumber, episodeNumber).map { entities ->
+            entities.map { it.toDomain() }
+        }
     }
 
     override suspend fun saveEpisode(episode: Episode): Long {

@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -37,19 +38,32 @@ class EpisodeDetailViewModel @Inject constructor(
     private val season: Int = savedStateHandle["season"] ?: 0
     private val episode: Int = savedStateHandle["episode"] ?: 0
     private val showName: String = savedStateHandle["showName"] ?: ""
+    private val entryId: Long = savedStateHandle["entryId"] ?: 0L
 
     private val _events = MutableSharedFlow<EpisodeDetailEvent>()
     val events: SharedFlow<EpisodeDetailEvent> = _events.asSharedFlow()
 
     private val remoteEpisode = MutableStateFlow<Result<Episode>>(Result.Loading)
-    private val localEntry = MutableStateFlow<Episode?>(null)
 
-    val isLogged: StateFlow<Boolean> = localEntry
+    private val _entries = MutableStateFlow<List<Episode>>(emptyList())
+    val entries: StateFlow<List<Episode>> = _entries.asStateFlow()
+
+    private val _selectedId = MutableStateFlow(entryId)
+
+    val selectedEntry: StateFlow<Episode?> = combine(_entries, _selectedId) { list, selectedId ->
+        if (selectedId > 0L) {
+            list.firstOrNull { it.id == selectedId } ?: list.firstOrNull()
+        } else {
+            list.firstOrNull()
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    val isLogged: StateFlow<Boolean> = selectedEntry
         .map { it != null }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     val episodeDetail: StateFlow<Result<Episode>> =
-        combine(remoteEpisode, localEntry) { remote, local ->
+        combine(remoteEpisode, selectedEntry) { remote, local ->
             when (remote) {
                 is Result.Success -> Result.Success(
                     remote.data.copy(showName = showName, notes = local?.notes.orEmpty())
@@ -60,7 +74,7 @@ class EpisodeDetailViewModel @Inject constructor(
 
     init {
         loadEpisodeDetails()
-        observeLocalEntry()
+        observeEntries()
     }
 
     private fun loadEpisodeDetails() {
@@ -70,27 +84,34 @@ class EpisodeDetailViewModel @Inject constructor(
         }
     }
 
-    private fun observeLocalEntry() {
+    private fun observeEntries() {
         viewModelScope.launch {
-            episodeRepository.observeLocalEpisode(showId, season, episode).collect { local ->
-                localEntry.value = local
+            episodeRepository.observeEpisodeEntries(showId, season, episode).collect { list ->
+                _entries.value = list
             }
         }
     }
 
-    fun deleteEpisode() {
+    fun selectEntry(id: Long) {
+        _selectedId.value = id
+    }
+
+    fun deleteEntry(id: Long) {
         viewModelScope.launch {
-            val local = localEntry.value ?: return@launch
-            deleteEpisodeUseCase(local)
-            _events.emit(EpisodeDetailEvent.Deleted)
+            val entry = _entries.value.firstOrNull { it.id == id } ?: return@launch
+            val isLastEntry = _entries.value.size == 1
+            deleteEpisodeUseCase(entry)
+            if (isLastEntry) {
+                _events.emit(EpisodeDetailEvent.Deleted)
+            }
         }
     }
 
-    fun saveNotes(notes: String) {
+    fun updateEntry(notes: String?, isRewatch: Boolean) {
         viewModelScope.launch {
-            val episodeToSave = localEntry.value?.copy(notes = notes)
-                ?: (remoteEpisode.value as? Result.Success)?.data?.copy(notes = notes)
-            episodeToSave?.let { episodeRepository.saveEpisode(it) }
+            selectedEntry.value
+                ?.copy(notes = notes, isRewatch = isRewatch)
+                ?.let { episodeRepository.saveEpisode(it) }
         }
     }
 }

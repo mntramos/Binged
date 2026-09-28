@@ -20,9 +20,9 @@ sealed class Route(val path: String) {
 
     data object Diary : Route("diary")
 
-    data object EpisodeDetail : Route("episode_detail/{showId}/{season}/{episode}?showName={showName}") {
-        fun createRoute(showId: Int, season: Int, episode: Int, showName: String = "") =
-            "episode_detail/$showId/$season/$episode?showName=${Uri.encode(showName)}"
+    data object EpisodeDetail : Route("episode_detail/{showId}/{season}/{episode}?showName={showName}&entryId={entryId}") {
+        fun createRoute(showId: Int, season: Int, episode: Int, showName: String = "", entryId: Long = 0L) =
+            "episode_detail/$showId/$season/$episode?showName=${Uri.encode(showName)}&entryId=$entryId"
     }
 
     data object Settings : Route("settings")

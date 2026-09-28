@@ -1,5 +1,6 @@
 package com.app.binged.feature.shows.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,15 +13,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -39,18 +45,24 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.app.binged.core.utils.Result
+import com.app.binged.domain.model.Episode
 import com.app.binged.feature.shows.viewmodel.EpisodeDetailEvent
 import com.app.binged.feature.shows.viewmodel.EpisodeDetailViewModel
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,12 +75,18 @@ fun EpisodeDetailScreen(
 ) {
     val episodeState by viewModel.episodeDetail.collectAsState()
     val isLogged by viewModel.isLogged.collectAsState()
+    val entries by viewModel.entries.collectAsState()
+    val selectedEntry by viewModel.selectedEntry.collectAsState()
     var menuExpanded by remember { mutableStateOf(false) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
+    var entryPendingDelete by remember { mutableStateOf<Episode?>(null) }
     var showDeleteNoteDialog by remember { mutableStateOf(false) }
     var showNoteDialog by remember { mutableStateOf(false) }
     var noteText by remember { mutableStateOf("") }
+    var noteIsRewatch by remember { mutableStateOf(false) }
     var hadExistingNote by remember { mutableStateOf(false) }
+    var historyExpanded by rememberSaveable { mutableStateOf(true) }
+    val entryDateFormat =
+        DateTimeFormatter.ofPattern("MMM dd, yyyy").withZone(ZoneId.systemDefault())
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -78,21 +96,26 @@ fun EpisodeDetailScreen(
         }
     }
 
-    if (showDeleteDialog) {
+    entryPendingDelete?.let { target ->
         AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
+            onDismissRequest = { entryPendingDelete = null },
             title = { Text("Delete Entry") },
-            text = { Text("Are you sure you want to delete this episode from your diary?") },
+            text = {
+                Text(
+                    "Remove the watch from ${entryDateFormat.format(target.watchedDate)}? " +
+                        "Other watches of this episode are kept."
+                )
+            },
             confirmButton = {
                 TextButton(onClick = {
-                    showDeleteDialog = false
-                    viewModel.deleteEpisode()
+                    entryPendingDelete = null
+                    viewModel.deleteEntry(target.id)
                 }) {
                     Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
+                TextButton(onClick = { entryPendingDelete = null }) {
                     Text("Cancel")
                 }
             }
@@ -107,7 +130,10 @@ fun EpisodeDetailScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteNoteDialog = false
-                    viewModel.saveNotes("")
+                    viewModel.updateEntry(
+                        notes = null,
+                        isRewatch = selectedEntry?.isRewatch ?: false
+                    )
                 }) {
                     Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
@@ -123,22 +149,37 @@ fun EpisodeDetailScreen(
     if (showNoteDialog) {
         AlertDialog(
             onDismissRequest = { showNoteDialog = false },
-            title = {
-                Text(if (noteText.isNotEmpty()) "Edit Note" else "Add Note")
-            },
+            title = { Text("Edit Entry") },
             text = {
-                OutlinedTextField(
-                    value = noteText,
-                    onValueChange = { noteText = it },
-                    label = { Text("Note") },
-                    modifier = Modifier.fillMaxWidth().height(150.dp),
-                    maxLines = 10
-                )
+                Column {
+                    OutlinedTextField(
+                        value = noteText,
+                        onValueChange = { noteText = it },
+                        label = { Text("Note") },
+                        modifier = Modifier.fillMaxWidth().height(150.dp),
+                        maxLines = 10
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { noteIsRewatch = !noteIsRewatch }
+                    ) {
+                        Checkbox(
+                            checked = noteIsRewatch,
+                            onCheckedChange = { noteIsRewatch = it }
+                        )
+                        Text(text = "Rewatch", style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
             },
             confirmButton = {
                 TextButton(onClick = {
                     showNoteDialog = false
-                    viewModel.saveNotes(noteText)
+                    viewModel.updateEntry(
+                        notes = noteText.takeIf { it.isNotBlank() },
+                        isRewatch = noteIsRewatch
+                    )
                 }) {
                     Text("Save")
                 }
@@ -203,20 +244,12 @@ fun EpisodeDetailScreen(
                                 )
                             } else {
                                 DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            if (episodeState is Result.Success &&
-                                                !(episodeState as Result.Success).data.notes.isNullOrEmpty()
-                                            ) "Edit Note" else "Add Note"
-                                        )
-                                    },
+                                    text = { Text("Edit") },
                                     onClick = {
                                         menuExpanded = false
-                                        if (episodeState is Result.Success) {
-                                            val existing = (episodeState as Result.Success).data.notes.orEmpty()
-                                            noteText = existing
-                                            hadExistingNote = existing.isNotEmpty()
-                                        }
+                                        noteText = selectedEntry?.notes.orEmpty()
+                                        noteIsRewatch = selectedEntry?.isRewatch ?: false
+                                        hadExistingNote = !selectedEntry?.notes.isNullOrEmpty()
                                         showNoteDialog = true
                                     },
                                     leadingIcon = {
@@ -227,10 +260,23 @@ fun EpisodeDetailScreen(
                                     }
                                 )
                                 DropdownMenuItem(
+                                    text = { Text("Log Again") },
+                                    onClick = {
+                                        menuExpanded = false
+                                        onLogEpisodeClick()
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Replay,
+                                            contentDescription = null
+                                        )
+                                    }
+                                )
+                                DropdownMenuItem(
                                     text = { Text("Delete") },
                                     onClick = {
                                         menuExpanded = false
-                                        showDeleteDialog = true
+                                        entryPendingDelete = selectedEntry
                                     },
                                     leadingIcon = {
                                         Icon(
@@ -384,8 +430,120 @@ fun EpisodeDetailScreen(
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
+
+                        if (entries.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { historyExpanded = !historyExpanded }
+                                    .padding(vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = if (entries.size > 1) {
+                                        "Watch History (${entries.size}) · ${entryDateFormat.format(entries.first().watchedDate)}"
+                                    } else {
+                                        "Watch History · ${entryDateFormat.format(entries.first().watchedDate)}"
+                                    },
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Icon(
+                                    imageVector = if (historyExpanded) {
+                                        Icons.Default.ExpandLess
+                                    } else {
+                                        Icons.Default.ExpandMore
+                                    },
+                                    contentDescription = if (historyExpanded) {
+                                        "Collapse watch history"
+                                    } else {
+                                        "Expand watch history"
+                                    }
+                                )
+                            }
+                            if (historyExpanded) {
+                                entries.forEach { entry ->
+                                    WatchHistoryRow(
+                                        entry = entry,
+                                        isSelected = entry.id == selectedEntry?.id,
+                                        dateFormat = entryDateFormat,
+                                        onClick = { viewModel.selectEntry(entry.id) },
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WatchHistoryRow(
+    entry: Episode,
+    isSelected: Boolean,
+    dateFormat: DateTimeFormatter,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val contentColor = if (isSelected) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                color = if (isSelected) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant
+                }
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = dateFormat.format(entry.watchedDate),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = contentColor
+                )
+                if (entry.isRewatch) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Rewatch",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isSelected) {
+                            contentColor
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        }
+                    )
+                }
+            }
+            if (!entry.notes.isNullOrBlank()) {
+                Text(
+                    text = entry.notes.orEmpty(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (isSelected) {
+                        contentColor.copy(alpha = 0.75f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }

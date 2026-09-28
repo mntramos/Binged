@@ -39,7 +39,7 @@ import com.app.binged.domain.model.Episode
 @Composable
 fun DiaryItem(
     episode: Episode,
-    onClick: (Int, Int, Int, String) -> Unit,
+    onClick: (Int, Int, Int, String, Long) -> Unit,
     onDeleteRequest: (Episode) -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
@@ -83,7 +83,7 @@ fun DiaryItem(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = { onClick(episode.showId, episode.seasonNumber, episode.episodeNumber, episode.showName) })
+                    .clickable(onClick = { onClick(episode.showId, episode.seasonNumber, episode.episodeNumber, episode.showName, episode.id) })
             ) {
                 AsyncImage(
                     model = "https://image.tmdb.org/t/p/w500${episode.stillPath}",

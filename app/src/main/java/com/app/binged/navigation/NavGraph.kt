@@ -194,8 +194,10 @@ fun MainAppNav(
 
         composable(Route.Diary.path) {
             DiaryScreen(
-                onEpisodeClick = { showId, season, episode, showName ->
-                    navController.navigate(Route.EpisodeDetail.createRoute(showId, season, episode, showName))
+                onEpisodeClick = { showId, season, episode, showName, entryId ->
+                    navController.navigate(
+                        Route.EpisodeDetail.createRoute(showId, season, episode, showName, entryId)
+                    )
                 },
                 onBack = { navController.popBackStack() }
             )
@@ -207,7 +209,8 @@ fun MainAppNav(
                 navArgument("showId") { type = NavType.IntType },
                 navArgument("season") { type = NavType.IntType },
                 navArgument("episode") { type = NavType.IntType },
-                navArgument("showName") { defaultValue = ""; type = NavType.StringType }
+                navArgument("showName") { defaultValue = ""; type = NavType.StringType },
+                navArgument("entryId") { defaultValue = 0L; type = NavType.LongType }
             )
         ) { backStackEntry ->
             val showId = backStackEntry.arguments?.getInt("showId") ?: 0
