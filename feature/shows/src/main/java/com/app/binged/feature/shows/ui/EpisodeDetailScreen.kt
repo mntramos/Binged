@@ -2,6 +2,7 @@ package com.app.binged.feature.shows.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -84,6 +85,7 @@ fun EpisodeDetailScreen(
     var showNoteDialog by remember { mutableStateOf(false) }
     var noteText by remember { mutableStateOf("") }
     var noteIsRewatch by remember { mutableStateOf(false) }
+    var noteRating by remember { mutableStateOf<Int?>(null) }
     var hadExistingNote by remember { mutableStateOf(false) }
     var historyExpanded by rememberSaveable { mutableStateOf(true) }
     val entryDateFormat =
@@ -133,7 +135,8 @@ fun EpisodeDetailScreen(
                     showDeleteNoteDialog = false
                     viewModel.updateEntry(
                         notes = null,
-                        isRewatch = selectedEntry?.isRewatch ?: false
+                        isRewatch = selectedEntry?.isRewatch ?: false,
+                        rating = selectedEntry?.rating
                     )
                 }) {
                     Text("Delete", color = MaterialTheme.colorScheme.error)
@@ -172,6 +175,25 @@ fun EpisodeDetailScreen(
                         )
                         Text(text = "Rewatch", style = MaterialTheme.typography.bodyLarge)
                     }
+                    Column {
+                        Text(
+                            text = "Rating",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        StarRatingInput(
+                            rating = noteRating,
+                            onRatingChange = { noteRating = it }
+                        )
+                        if (noteRating != null) {
+                            TextButton(
+                                onClick = { noteRating = null },
+                                modifier = Modifier.padding(top = 0.dp)
+                            ) {
+                                Text("Clear rating")
+                            }
+                        }
+                    }
                 }
             },
             confirmButton = {
@@ -179,7 +201,8 @@ fun EpisodeDetailScreen(
                     showNoteDialog = false
                     viewModel.updateEntry(
                         notes = noteText.takeIf { it.isNotBlank() },
-                        isRewatch = noteIsRewatch
+                        isRewatch = noteIsRewatch,
+                        rating = noteRating
                     )
                 }) {
                     Text("Save")
@@ -250,6 +273,7 @@ fun EpisodeDetailScreen(
                                         menuExpanded = false
                                         noteText = selectedEntry?.notes.orEmpty()
                                         noteIsRewatch = selectedEntry?.isRewatch ?: false
+                                        noteRating = selectedEntry?.rating
                                         hadExistingNote = !selectedEntry?.notes.isNullOrEmpty()
                                         showNoteDialog = true
                                     },
@@ -513,27 +537,12 @@ private fun WatchHistoryRow(
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = dateFormat.format(entry.watchedDate),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = contentColor
-                )
-                if (entry.isRewatch) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Icon(
-                        imageVector = Icons.Default.RemoveRedEye,
-                        contentDescription = "Rewatch",
-                        tint = if (isSelected) {
-                            contentColor
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        },
-                        modifier = Modifier.size(14.dp)
-                    )
-                }
-            }
+            Text(
+                text = dateFormat.format(entry.watchedDate),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = contentColor
+            )
             if (!entry.notes.isNullOrBlank()) {
                 Text(
                     text = entry.notes.orEmpty(),
@@ -546,6 +555,35 @@ private fun WatchHistoryRow(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
+            }
+        }
+        if (entry.isRewatch || entry.rating != null) {
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                if (entry.isRewatch) {
+                    Icon(
+                        imageVector = Icons.Default.RemoveRedEye,
+                        contentDescription = "Rewatch",
+                        tint = if (isSelected) {
+                            contentColor
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        },
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+                entry.rating?.let { rating ->
+                    RatingBadge(
+                        rating = rating,
+                        tint = if (isSelected) {
+                            contentColor
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        }
+                    )
+                }
             }
         }
     }

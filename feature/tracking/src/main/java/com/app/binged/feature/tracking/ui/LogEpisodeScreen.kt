@@ -72,14 +72,24 @@ fun LogEpisodeScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(Instant.now()) }
     var isRewatch by remember { mutableStateOf(false) }
+    var rateWatch by remember { mutableStateOf(false) }
+    var rating by remember { mutableStateOf<Int?>(null) }
 
     val episodeState by viewModel.episodeDetails.collectAsState()
     val verificationState by viewModel.verificationState.collectAsState()
     val alreadyLogged by viewModel.alreadyLogged.collectAsState()
+    val previousRating by viewModel.previousRating.collectAsState()
     val dateFormat = DateTimeFormatter.ofPattern("MMM dd, yyyy").withZone(ZoneId.systemDefault())
 
     LaunchedEffect(alreadyLogged) {
         if (alreadyLogged) isRewatch = true
+    }
+
+    LaunchedEffect(alreadyLogged, previousRating) {
+        if (alreadyLogged) {
+            rateWatch = previousRating != null
+            rating = previousRating
+        }
     }
 
     LaunchedEffect(showId) {
@@ -259,6 +269,36 @@ fun LogEpisodeScreen(
                 )
             }
 
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        rateWatch = !rateWatch
+                        if (!rateWatch) rating = null
+                    }
+            ) {
+                Checkbox(
+                    checked = rateWatch,
+                    onCheckedChange = {
+                        rateWatch = it
+                        if (!it) rating = null
+                    }
+                )
+                Text(
+                    text = "Rate this watch",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+
+            if (rateWatch) {
+                StarRatingInput(
+                    rating = rating,
+                    onRatingChange = { rating = it },
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+
             OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = it },
@@ -280,7 +320,8 @@ fun LogEpisodeScreen(
                             episodeNumber = episodeNum,
                             watchedDate = selectedDate,
                             notes = notes.takeIf { it.isNotBlank() },
-                            isRewatch = isRewatch
+                            isRewatch = isRewatch,
+                            rating = if (rateWatch) rating else null
                         )
                     }
                 },

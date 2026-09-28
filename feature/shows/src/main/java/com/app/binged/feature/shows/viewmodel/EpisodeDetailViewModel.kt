@@ -107,10 +107,10 @@ class EpisodeDetailViewModel @Inject constructor(
         }
     }
 
-    fun updateEntry(notes: String?, isRewatch: Boolean) {
+    fun updateEntry(notes: String?, isRewatch: Boolean, rating: Int?) {
         viewModelScope.launch {
             selectedEntry.value
-                ?.copy(notes = notes, isRewatch = isRewatch)
+                ?.copy(notes = notes, isRewatch = isRewatch, rating = rating)
                 ?.let { episodeRepository.saveEpisode(it) }
         }
     }

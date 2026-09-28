@@ -85,7 +85,8 @@ fun EpisodeEntity.toDomain(): Episode {
         stillPath = stillPath,
         notes = notes,
         runtime = runtime,
-        isRewatch = isRewatch
+        isRewatch = isRewatch,
+        rating = rating
     )
 }
 
@@ -102,6 +103,7 @@ fun Episode.toEntity(): EpisodeEntity {
         stillPath = stillPath,
         notes = notes,
         runtime = runtime,
-        isRewatch = isRewatch
+        isRewatch = isRewatch,
+        rating = rating
     )
 }

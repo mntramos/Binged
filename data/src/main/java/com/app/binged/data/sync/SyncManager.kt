@@ -198,7 +198,8 @@ private fun EpisodeEntity.toMap(): Map<String, Any?> = mapOf(
     "stillPath" to stillPath,
     "notes" to notes,
     "runtime" to runtime.toLong(),
-    "isRewatch" to isRewatch
+    "isRewatch" to isRewatch,
+    "rating" to rating
 )
 
 private fun DocumentSnapshot.toShowEntity(): ShowEntity? {
@@ -232,6 +233,7 @@ private fun DocumentSnapshot.toEpisodeEntity(): EpisodeEntity? {
         stillPath = getString("stillPath"),
         notes = getString("notes"),
         runtime = (getLong("runtime") ?: 0L).toInt(),
-        isRewatch = getBoolean("isRewatch") ?: false
+        isRewatch = getBoolean("isRewatch") ?: false,
+        rating = (getLong("rating") ?: getDouble("rating")?.toLong())?.toInt()
     )
 }

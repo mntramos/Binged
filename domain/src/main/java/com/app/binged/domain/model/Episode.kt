@@ -17,7 +17,8 @@ data class Episode(
     val airDate: String = "",
     val voteAverage: Double = 0.0,
     val runtime: Int = 0,
-    val isRewatch: Boolean = false
+    val isRewatch: Boolean = false,
+    val rating: Int? = null
 ) {
     fun getIdentifier(): String {
         val season = seasonNumber.toString().padStart(2, '0')

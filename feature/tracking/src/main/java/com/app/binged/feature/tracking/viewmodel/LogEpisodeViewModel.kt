@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.Instant
 import javax.inject.Inject
@@ -34,6 +35,9 @@ class LogEpisodeViewModel @Inject constructor(
     private val _alreadyLogged = MutableStateFlow(false)
     val alreadyLogged: StateFlow<Boolean> = _alreadyLogged.asStateFlow()
 
+    private val _previousRating = MutableStateFlow<Int?>(null)
+    val previousRating: StateFlow<Int?> = _previousRating.asStateFlow()
+
     private var verifyJob: Job? = null
 
     fun setShowId(id: Int) {
@@ -46,6 +50,7 @@ class LogEpisodeViewModel @Inject constructor(
         if (seasonNumber <= 0 || episodeNumber <= 0) {
             _verificationState.value = null
             _alreadyLogged.value = false
+            _previousRating.value = null
             return
         }
         verifyJob = viewModelScope.launch {
@@ -53,8 +58,11 @@ class LogEpisodeViewModel @Inject constructor(
             _verificationState.value = Result.Loading
             val result = getEpisodeDetailsUseCase(showId, seasonNumber, episodeNumber)
             _verificationState.value = result
-            _alreadyLogged.value =
-                episodeRepository.getLocalEpisode(showId, seasonNumber, episodeNumber) != null
+            val existing = episodeRepository
+                .observeEpisodeEntries(showId, seasonNumber, episodeNumber)
+                .first()
+            _alreadyLogged.value = existing.isNotEmpty()
+            _previousRating.value = existing.firstOrNull()?.rating
         }
     }
 
@@ -64,7 +72,8 @@ class LogEpisodeViewModel @Inject constructor(
         episodeNumber: Int,
         watchedDate: Instant,
         notes: String?,
-        isRewatch: Boolean
+        isRewatch: Boolean,
+        rating: Int?
     ) {
         val showId = _showId.value ?: return
 
@@ -82,7 +91,8 @@ class LogEpisodeViewModel @Inject constructor(
                         showName = showName,
                         watchedDate = watchedDate,
                         notes = notes,
-                        isRewatch = isRewatch
+                        isRewatch = isRewatch,
+                        rating = rating
                     )
                     logEpisodeUseCase(episode)
                 }
