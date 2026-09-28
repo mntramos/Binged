@@ -15,5 +15,6 @@ data class EpisodeEntity(
     val watchedDate: Long,
     val stillPath: String?,
     val notes: String?,
-    val runtime: Int = 0
+    val runtime: Int = 0,
+    val isRewatch: Boolean = false
 )

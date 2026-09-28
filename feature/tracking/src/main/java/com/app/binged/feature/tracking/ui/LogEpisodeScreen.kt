@@ -2,6 +2,7 @@ package com.app.binged.feature.tracking.ui
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -69,10 +71,16 @@ fun LogEpisodeScreen(
     var notes by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(Instant.now()) }
+    var isRewatch by remember { mutableStateOf(false) }
 
     val episodeState by viewModel.episodeDetails.collectAsState()
     val verificationState by viewModel.verificationState.collectAsState()
+    val alreadyLogged by viewModel.alreadyLogged.collectAsState()
     val dateFormat = DateTimeFormatter.ofPattern("MMM dd, yyyy").withZone(ZoneId.systemDefault())
+
+    LaunchedEffect(alreadyLogged) {
+        if (alreadyLogged) isRewatch = true
+    }
 
     LaunchedEffect(showId) {
         viewModel.setShowId(showId)
@@ -235,6 +243,22 @@ fun LogEpisodeScreen(
                 )
             }
 
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isRewatch = !isRewatch }
+            ) {
+                Checkbox(
+                    checked = isRewatch,
+                    onCheckedChange = { isRewatch = it }
+                )
+                Text(
+                    text = "Rewatch",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+
             OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = it },
@@ -255,7 +279,8 @@ fun LogEpisodeScreen(
                             seasonNumber = seasonNum,
                             episodeNumber = episodeNum,
                             watchedDate = selectedDate,
-                            notes = notes.takeIf { it.isNotBlank() }
+                            notes = notes.takeIf { it.isNotBlank() },
+                            isRewatch = isRewatch
                         )
                     }
                 },

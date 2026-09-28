@@ -3,6 +3,7 @@ package com.app.binged.feature.tracking.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.binged.core.utils.Result
+import com.app.binged.domain.contract.EpisodeRepository
 import com.app.binged.domain.model.Episode
 import com.app.binged.domain.usecase.GetEpisodeDetailsUseCase
 import com.app.binged.domain.usecase.LogEpisodeUseCase
@@ -11,6 +12,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.Instant
 import javax.inject.Inject
@@ -18,7 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class LogEpisodeViewModel @Inject constructor(
     private val logEpisodeUseCase: LogEpisodeUseCase,
-    private val getEpisodeDetailsUseCase: GetEpisodeDetailsUseCase
+    private val getEpisodeDetailsUseCase: GetEpisodeDetailsUseCase,
+    private val episodeRepository: EpisodeRepository
 ) : ViewModel() {
 
     private val _showId = MutableStateFlow<Int?>(null)
@@ -27,6 +30,9 @@ class LogEpisodeViewModel @Inject constructor(
 
     private val _verificationState = MutableStateFlow<Result<Episode>?>(null)
     val verificationState: StateFlow<Result<Episode>?> = _verificationState
+
+    private val _alreadyLogged = MutableStateFlow(false)
+    val alreadyLogged: StateFlow<Boolean> = _alreadyLogged.asStateFlow()
 
     private var verifyJob: Job? = null
 
@@ -39,6 +45,7 @@ class LogEpisodeViewModel @Inject constructor(
         val showId = _showId.value ?: return
         if (seasonNumber <= 0 || episodeNumber <= 0) {
             _verificationState.value = null
+            _alreadyLogged.value = false
             return
         }
         verifyJob = viewModelScope.launch {
@@ -46,6 +53,8 @@ class LogEpisodeViewModel @Inject constructor(
             _verificationState.value = Result.Loading
             val result = getEpisodeDetailsUseCase(showId, seasonNumber, episodeNumber)
             _verificationState.value = result
+            _alreadyLogged.value =
+                episodeRepository.getLocalEpisode(showId, seasonNumber, episodeNumber) != null
         }
     }
 
@@ -54,7 +63,8 @@ class LogEpisodeViewModel @Inject constructor(
         seasonNumber: Int,
         episodeNumber: Int,
         watchedDate: Instant,
-        notes: String?
+        notes: String?,
+        isRewatch: Boolean
     ) {
         val showId = _showId.value ?: return
 
@@ -67,10 +77,12 @@ class LogEpisodeViewModel @Inject constructor(
 
                 if (result is Result.Success) {
                     val episode = result.data.copy(
+                        id = 0,
                         showId = showId,
                         showName = showName,
                         watchedDate = watchedDate,
-                        notes = notes
+                        notes = notes,
+                        isRewatch = isRewatch
                     )
                     logEpisodeUseCase(episode)
                 }
