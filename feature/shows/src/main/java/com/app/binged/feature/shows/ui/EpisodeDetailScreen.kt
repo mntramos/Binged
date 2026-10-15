@@ -72,10 +72,11 @@ import java.util.Locale
 fun EpisodeDetailScreen(
     onBack: () -> Unit,
     onShowClick: (Int) -> Unit = {},
-    onLogEpisodeClick: () -> Unit = {},
+    onLogEpisodeClick: (String) -> Unit = {},
     viewModel: EpisodeDetailViewModel = hiltViewModel()
 ) {
     val episodeState by viewModel.episodeDetail.collectAsState()
+    val showName by viewModel.showName.collectAsState()
     val isLogged by viewModel.isLogged.collectAsState()
     val entries by viewModel.entries.collectAsState()
     val selectedEntry by viewModel.selectedEntry.collectAsState()
@@ -257,7 +258,7 @@ fun EpisodeDetailScreen(
                                     text = { Text("Log Episode") },
                                     onClick = {
                                         menuExpanded = false
-                                        onLogEpisodeClick()
+                                        onLogEpisodeClick(showName)
                                     },
                                     leadingIcon = {
                                         Icon(
@@ -288,7 +289,7 @@ fun EpisodeDetailScreen(
                                     text = { Text("Log Again") },
                                     onClick = {
                                         menuExpanded = false
-                                        onLogEpisodeClick()
+                                        onLogEpisodeClick(showName)
                                     },
                                     leadingIcon = {
                                         Icon(

@@ -8,6 +8,7 @@ import com.app.binged.domain.contract.EpisodeRepository
 import com.app.binged.domain.model.Episode
 import com.app.binged.domain.usecase.DeleteEpisodeUseCase
 import com.app.binged.domain.usecase.GetEpisodeDetailsUseCase
+import com.app.binged.domain.usecase.GetTrackedShowsUseCase
 import com.app.binged.domain.usecase.UpdateSeenEpisodesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -31,6 +32,7 @@ sealed interface EpisodeDetailEvent {
 class EpisodeDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getEpisodeDetailsUseCase: GetEpisodeDetailsUseCase,
+    private val getTrackedShowsUseCase: GetTrackedShowsUseCase,
     private val updateSeenEpisodesUseCase: UpdateSeenEpisodesUseCase,
     private val episodeRepository: EpisodeRepository,
     private val deleteEpisodeUseCase: DeleteEpisodeUseCase
@@ -39,8 +41,20 @@ class EpisodeDetailViewModel @Inject constructor(
     private val showId: Int = savedStateHandle["showId"] ?: 0
     private val season: Int = savedStateHandle["season"] ?: 0
     private val episode: Int = savedStateHandle["episode"] ?: 0
-    private val showName: String = savedStateHandle["showName"] ?: ""
+    private val routeShowName: String = savedStateHandle["showName"] ?: ""
     private val entryId: Long = savedStateHandle["entryId"] ?: 0L
+
+    /**
+     * The show's name, resolved from the tracked show rather than trusted to the
+     * route argument. Catalog episodes are mapped from TMDB without a name, so
+     * a caller can legitimately arrive here with an empty [routeShowName]; the
+     * stored name is authoritative and also repairs entries saved while blank.
+     */
+    val showName: StateFlow<String> = getTrackedShowsUseCase()
+        .map { shows ->
+            shows.firstOrNull { it.id == showId }?.name?.takeIf { it.isNotBlank() } ?: routeShowName
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), routeShowName)
 
     private val _events = MutableSharedFlow<EpisodeDetailEvent>()
     val events: SharedFlow<EpisodeDetailEvent> = _events.asSharedFlow()
@@ -65,10 +79,10 @@ class EpisodeDetailViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     val episodeDetail: StateFlow<Result<Episode>> =
-        combine(remoteEpisode, selectedEntry) { remote, local ->
+        combine(remoteEpisode, selectedEntry, showName) { remote, local, name ->
             when (remote) {
                 is Result.Success -> Result.Success(
-                    remote.data.copy(showName = showName, notes = local?.notes.orEmpty())
+                    remote.data.copy(showName = name, notes = local?.notes.orEmpty())
                 )
                 else -> remote
             }

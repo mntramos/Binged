@@ -395,7 +395,7 @@ fun ShowDetailScreen(
                                             onToggleSeen = {
                                                 viewModel.toggleSeen(episode.seasonNumber, episode.episodeNumber)
                                             },
-                                            onClick = { onEpisodeClick(showId, episode.seasonNumber, episode.episodeNumber, episode.showName) },
+                                            onClick = { onEpisodeClick(showId, episode.seasonNumber, episode.episodeNumber, showName) },
                                         )
                                     }
                                 }

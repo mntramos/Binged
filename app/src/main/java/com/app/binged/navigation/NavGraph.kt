@@ -216,7 +216,6 @@ fun MainAppNav(
             val showId = backStackEntry.arguments?.getInt("showId") ?: 0
             val season = backStackEntry.arguments?.getInt("season") ?: 0
             val episode = backStackEntry.arguments?.getInt("episode") ?: 0
-            val showName = backStackEntry.arguments?.getString("showName") ?: ""
             EpisodeDetailScreen(
                 onBack = { navController.popBackStack() },
                 onShowClick = { showId ->
@@ -225,8 +224,8 @@ fun MainAppNav(
                         launchSingleTop = true
                     }
                 },
-                onLogEpisodeClick = {
-                    navController.currentBackStackEntry?.savedStateHandle?.set("showName", showName)
+                onLogEpisodeClick = { name ->
+                    navController.currentBackStackEntry?.savedStateHandle?.set("showName", name)
                     navController.navigate(Route.LogEpisode.createRoute(showId, season, episode))
                 }
             )
