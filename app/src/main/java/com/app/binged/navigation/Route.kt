@@ -27,6 +27,8 @@ sealed class Route(val path: String) {
 
     data object Settings : Route("settings")
 
+    data object ApiKey : Route("api_key")
+
     data object Statistics : Route("statistics")
 
     data object Tutorial : Route("tutorial")

@@ -33,13 +33,13 @@ Clean Architecture with MVVM: `Feature Screens → ViewModel → Use Case → Re
 
 ## Building the App
 
-1. Get your **TMDB API Read Access Token** from [The Movie Database](https://www.themoviedb.org/settings/api).
-2. Open `local.properties` and add:
-   ```properties
-   TMDB_KEY=your_tmdb_api_read_access_token
-   ```
-3. (Optional) Add `google-services.json` for Firebase features.
-4. Build: `./gradlew assembleDebug`
+1. (Optional) Add `google-services.json` for Firebase features.
+2. Build: `./gradlew assembleDebug`
+
+No TMDB credentials are required at build time. Each copy of the app runs on the
+TMDB API key supplied by whoever installed it: after signing in, the app asks for
+a key from [The Movie Database](https://www.themoviedb.org/settings/api) and stores
+it on the device. The key can be changed later from Settings → TMDB.
 
 ## Requirements
 

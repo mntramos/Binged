@@ -32,6 +32,7 @@ import com.app.binged.feature.auth.ui.RegisterScreen
 import com.app.binged.feature.diary.ui.DiaryScreen
 import com.app.binged.feature.statistics.StatisticsScreen
 import com.app.binged.feature.search.ui.SearchScreen
+import com.app.binged.feature.settings.ui.ApiKeyScreen
 import com.app.binged.feature.settings.ui.SettingsScreen
 import com.app.binged.feature.shows.ui.EpisodeDetailScreen
 import com.app.binged.feature.shows.ui.ShowDetailScreen
@@ -44,11 +45,12 @@ fun BingedNavGraph(
     mainViewModel: MainViewModel = hiltViewModel()
 ) {
     val isAuthenticated by mainViewModel.authState.collectAsState()
+    val hasApiKey by mainViewModel.hasApiKey.collectAsState()
 
-    if (isAuthenticated) {
-        MainAppNav(mainViewModel = mainViewModel)
-    } else {
-        AuthNav()
+    when {
+        !isAuthenticated -> AuthNav()
+        !hasApiKey -> ApiKeyScreen(onSignOut = { mainViewModel.signOut() })
+        else -> MainAppNav(mainViewModel = mainViewModel)
     }
 }
 
@@ -233,6 +235,13 @@ fun MainAppNav(
 
         composable(Route.Settings.path) {
             SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onApiKeyClick = { navController.navigate(Route.ApiKey.path) }
+            )
+        }
+
+        composable(Route.ApiKey.path) {
+            ApiKeyScreen(
                 onBack = { navController.popBackStack() }
             )
         }

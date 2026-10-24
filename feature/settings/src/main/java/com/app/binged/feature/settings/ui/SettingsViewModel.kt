@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.binged.core.utils.Result
+import com.app.binged.data.auth.TmdbCredentials
 import com.app.binged.data.sync.SyncManager
 import com.app.binged.domain.contract.AuthRepository
 import com.app.binged.domain.contract.EpisodeRepository
@@ -18,10 +19,13 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -54,6 +58,7 @@ class SettingsViewModel @Inject constructor(
     private val showRepository: ShowRepository,
     private val episodeRepository: EpisodeRepository,
     private val syncManager: SyncManager,
+    private val credentials: TmdbCredentials,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -70,6 +75,10 @@ class SettingsViewModel @Inject constructor(
 
     private val _userEmail = MutableStateFlow<String?>(null)
     val userEmail: StateFlow<String?> = _userEmail.asStateFlow()
+
+    val keyConfigured: StateFlow<Boolean> = credentials.credential
+        .map { it.isNotBlank() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, credentials.read().isNotBlank())
 
     init {
         viewModelScope.launch {
@@ -95,6 +104,7 @@ class SettingsViewModel @Inject constructor(
                     episodeRepository.deleteAll()
                     _uiState.value = SettingsUiState.Idle
                     authRepository.signOut()
+                    credentials.clear()
                 }
                 is Result.Error -> {
                     _uiState.value = SettingsUiState.Idle

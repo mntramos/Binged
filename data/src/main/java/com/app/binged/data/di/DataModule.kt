@@ -4,8 +4,8 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import androidx.room.Room
 import com.app.binged.core.utils.NetworkMonitor
-import com.app.binged.data.BuildConfig
 import com.app.binged.data.api.TmdbService
+import com.app.binged.data.auth.TmdbCredentials
 import com.app.binged.data.database.AppDatabase
 import com.app.binged.data.database.dao.EpisodeDao
 import com.app.binged.data.database.dao.ShowDao
@@ -25,6 +25,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -75,23 +76,42 @@ object DataModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
+    fun provideOkHttpClient(
+        @ApplicationContext context: Context,
+        credentials: TmdbCredentials
+    ): OkHttpClient {
         val isDebug = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = if (isDebug) HttpLoggingInterceptor.Level.BODY
             else HttpLoggingInterceptor.Level.NONE
+            redactHeader("Authorization")
         }
         return OkHttpClient.Builder()
             .addInterceptor { chain ->
-                val request = chain.request().newBuilder()
-                    .addHeader("Authorization", "Bearer ${BuildConfig.TMDB_KEY}")
-                    .build()
-                chain.proceed(request)
+                chain.proceed(authorize(chain.request(), credentials.read()))
             }
             .addInterceptor(loggingInterceptor)
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .build()
+    }
+
+    /**
+     * TMDB accepts two credential shapes and its settings page presents both, so
+     * users routinely paste either one. Read access tokens are JWTs and travel
+     * in the Authorization header; the older 32-character API key travels as a
+     * query parameter. An unset credential leaves the request untouched.
+     */
+    private fun authorize(request: Request, credential: String): Request {
+        return when {
+            credential.isBlank() -> request
+            credential.startsWith("eyJ") -> request.newBuilder()
+                .addHeader("Authorization", "Bearer $credential")
+                .build()
+            else -> request.newBuilder()
+                .url(request.url.newBuilder().addQueryParameter("api_key", credential).build())
+                .build()
+        }
     }
 
     @Provides

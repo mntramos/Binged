@@ -1,5 +1,6 @@
 package com.app.binged.data.api
 
+import com.app.binged.data.model.TmdbConfigurationResponse
 import com.app.binged.data.model.TmdbEpisodeResponse
 import com.app.binged.data.model.TmdbSearchResponse
 import com.app.binged.data.model.TmdbSeasonResponse
@@ -36,4 +37,7 @@ interface TmdbService {
 
     @GET("tv/popular")
     suspend fun getPopularShows(): TmdbSearchResponse
+
+    @GET("configuration")
+    suspend fun getConfiguration(): TmdbConfigurationResponse
 }

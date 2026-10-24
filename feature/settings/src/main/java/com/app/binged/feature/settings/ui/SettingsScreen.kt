@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -49,10 +50,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onApiKeyClick: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val userEmail by viewModel.userEmail.collectAsState()
+    val keyConfigured by viewModel.keyConfigured.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -243,6 +246,35 @@ fun SettingsScreen(
                 Icon(Icons.Default.FileUpload, contentDescription = null)
                 Spacer(modifier = Modifier.padding(horizontal = 4.dp))
                 Text("Import Diary")
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            HorizontalDivider()
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            SectionHeader("TMDB")
+
+            Text(
+                text = if (keyConfigured) {
+                    "A TMDB API key is saved on this device."
+                } else {
+                    "No TMDB API key saved. Show and episode lookups will fail until you add one."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+
+            OutlinedButton(
+                onClick = onApiKeyClick,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = uiState !is SettingsUiState.Loading
+            ) {
+                Icon(Icons.Default.Key, contentDescription = null)
+                Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                Text(if (keyConfigured) "Change API Key" else "Add API Key")
             }
 
             Spacer(modifier = Modifier.height(24.dp))
