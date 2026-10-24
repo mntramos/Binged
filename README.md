@@ -9,6 +9,7 @@
 [![UI: Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Data: TMDB](https://img.shields.io/badge/Data-TMDB-01B4E4?logo=themoviedb&logoColor=white)](https://www.themoviedb.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/mntramos/Binged?logo=github&label=Release)](https://github.com/mntramos/Binged/releases/latest)
 
 </div>
 
@@ -61,10 +62,6 @@
 
 ---
 
-<!--
-TODO: capture these three screens, save them under images/, then uncomment this
-section. Files are referenced below as images/screenshot-*.png.
-
 ## Screenshots
 
 <table align="center">
@@ -79,7 +76,6 @@ section. Files are referenced below as images/screenshot-*.png.
     <td align="center"><img src="images/screenshot-diary.png" width="250" alt="Binged chronological diary" /></td>
   </tr>
 </table>
--->
 
 ## Prerequisites
 
