@@ -6,6 +6,7 @@ import com.app.binged.data.database.entity.EpisodeEntity
 import com.app.binged.data.database.entity.ShowEntity
 import com.app.binged.data.di.ApplicationScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -26,6 +27,9 @@ class SyncManager @Inject constructor(
 ) {
     companion object {
         private const val TAG = "SyncManager"
+
+        // Firestore allows 500 writes per batch; stay under it.
+        private const val BATCH_WRITE_LIMIT = 400
     }
 
     private val uid: String?
@@ -180,19 +184,25 @@ class SyncManager @Inject constructor(
         }
     }
 
+    /**
+     * Deletes every document this user owns in Firestore. Throws when the user is
+     * not signed in or when a commit fails, so callers can abort instead of
+     * removing the account while its cloud data survives.
+     */
     suspend fun deleteAll() {
-        val user = uid ?: return
-        try {
-            val showsRef = firestore.collection("users").document(user).collection("trackedShows")
-            val episodesRef = firestore.collection("users").document(user).collection("watchedEpisodes")
+        val user = uid ?: error("Cannot delete cloud data without a signed-in user")
+        val userRef = firestore.collection("users").document(user)
+        deleteCollection(userRef.collection("trackedShows"))
+        deleteCollection(userRef.collection("watchedEpisodes"))
+    }
 
-            for (doc in showsRef.get().await().documents) {
-                doc.reference.delete()
-            }
-            for (doc in episodesRef.get().await().documents) {
-                doc.reference.delete()
-            }
-        } catch (e: Exception) { Log.e(TAG, "deleteAll failed", e) }
+    private suspend fun deleteCollection(collection: CollectionReference) {
+        val documents = collection.get().await().documents
+        documents.chunked(BATCH_WRITE_LIMIT).forEach { chunk ->
+            val batch = firestore.batch()
+            chunk.forEach { batch.delete(it.reference) }
+            batch.commit().await()
+        }
     }
 }
 

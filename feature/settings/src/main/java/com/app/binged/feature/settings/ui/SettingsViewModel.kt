@@ -96,25 +96,39 @@ class SettingsViewModel @Inject constructor(
     fun deleteAccount() {
         viewModelScope.launch {
             _uiState.value = SettingsUiState.Loading
-            when (val result = authRepository.deleteAccount()) {
-                is Result.Success -> {
-                    syncManager.deleteAll()
-                    syncManager.stopListening()
-                    showRepository.deleteAll()
-                    episodeRepository.deleteAll()
-                    _uiState.value = SettingsUiState.Idle
-                    authRepository.signOut()
-                    credentials.clear()
-                }
-                is Result.Error -> {
-                    _uiState.value = SettingsUiState.Idle
-                    _events.emit(
-                        SettingsEvent.ShowError(
-                            result.exception.message ?: "Failed to delete account. You've been signed out — please log in again and retry."
-                        )
+            syncManager.stopListening()
+
+            // Cloud data goes first: once the auth user is deleted the token is
+            // revoked and Firestore rejects any further deletes for this account.
+            try {
+                syncManager.deleteAll()
+            } catch (e: Exception) {
+                _uiState.value = SettingsUiState.Idle
+                _events.emit(
+                    SettingsEvent.ShowError(
+                        "Couldn't delete your synced data. Check your connection and try again."
                     )
-                }
-                is Result.Loading -> {}
+                )
+                return@launch
+            }
+
+            val result = authRepository.deleteAccount()
+
+            // The cloud copy is gone either way, so drop the local one too rather
+            // than leaving data that could be pushed back on the next edit.
+            showRepository.deleteAll()
+            episodeRepository.deleteAll()
+            credentials.clear()
+            authRepository.signOut()
+            _uiState.value = SettingsUiState.Idle
+
+            if (result is Result.Error) {
+                _events.emit(
+                    SettingsEvent.ShowError(
+                        result.exception.message
+                            ?: "Your tracked data was deleted, but the account couldn't be removed. Sign in again and retry."
+                    )
+                )
             }
         }
     }
