@@ -31,7 +31,7 @@ android {
         minSdk = 29
         targetSdk = 36
 
-        val version = "0.1.3"
+        val version = "0.1.4"
         versionName = version
         versionCode = calculateVersionCode(version)
 
