@@ -24,12 +24,12 @@ fun calculateVersionCode(versionName: String): Int {
 
 android {
     namespace = "com.app.binged"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.app.binged"
         minSdk = 29
-        targetSdk = 35
+        targetSdk = 36
 
         val version = "0.1.3"
         versionName = version
